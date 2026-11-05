@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' blob: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>IDEA Pixel Lab v0.2</title>
+  <style>
+    :root{color-scheme:dark;--bg:#10151d;--panel:#1a2029;--panel2:#222a35;--line:#343e4a;--text:#e8edf2;--muted:#a3afbc;--accent:#a0dfc2;--accentink:#10231e;--warn:#ffd19c;--radius:8px}
+    *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:13px/1.35 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled,input:disabled,select:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .app{height:100vh;min-height:550px;display:flex;flex-direction:column;overflow:hidden}.topbar{height:62px;flex:none;display:flex;align-items:center;gap:12px;background:#171e28;border-bottom:1px solid var(--line);padding:0 16px;white-space:nowrap}.brand{display:flex;flex-direction:column;padding-right:16px;border-right:1px solid var(--line);line-height:1.12}.brand b{font-size:15px;letter-spacing:.045em}.brand small{color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.16em;margin-top:4px}.docname{min-width:100px;max-width:195px;width:13vw;padding:8px 10px;background:#111720;border:1px solid var(--line);border-radius:6px;color:var(--text);text-overflow:ellipsis}.toolbar-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.spacer{flex:1}.button{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 11px;color:var(--text);white-space:nowrap}.button:hover:not(:disabled){background:#303b47}.button.primary{background:var(--accent);border-color:var(--accent);color:var(--accentink);font-weight:700}.button.primary:hover:not(:disabled){background:#b8f0d5}.button.minor{font-size:12px;padding:6px 8px}.button.flat{border-color:transparent;background:transparent;color:var(--muted)}.button.flat:hover:not(:disabled){background:var(--panel2);color:var(--text)}.localtag{color:var(--accent);font-size:11px;white-space:nowrap;border:1px solid #416452;background:#1a3029;border-radius:30px;padding:7px 10px}
+    .main{display:grid;grid-template-columns:75px minmax(0,1fr) 290px;flex:1;min-height:0}.tools{background:#18202a;border-right:1px solid var(--line);padding:14px 7px;display:flex;flex-direction:column;align-items:center;gap:8px}.tool{width:59px;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:transparent;border:1px solid transparent;border-radius:8px;color:var(--muted)}.tool b{font-size:17px;line-height:1;font-weight:700}.tool span{font-size:10px}.tool.active{background:#2d473d;border-color:#639982;color:var(--accent)}.tool:hover:not(.active){background:var(--panel2);color:var(--text)}.tool-separator{height:1px;width:40px;background:var(--line);margin:9px 0}.tools{overflow-y:auto}.tool{flex-shrink:0}.toolhelp{margin-top:auto;font-size:10px;text-align:center;color:var(--muted);line-height:1.7}
+    .center{display:flex;flex-direction:column;min-width:0;min-height:0;background:#131922}.settings{height:58px;flex:none;display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--line);background:#1b232e;overflow-x:auto;white-space:nowrap}.settings strong{color:var(--accent);font-size:12px;min-width:max-content;flex:none;margin-right:4px}.control{display:flex;align-items:center;gap:7px;color:var(--muted)}.control label{font-size:11px}.control output{min-width:27px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}.control input[type=range]{width:92px;accent-color:var(--accent)}input[type=color]{width:35px;height:30px;border:1px solid var(--line);border-radius:5px;padding:2px;background:var(--panel2)}.control select,.layer-controls select{background:#151c26;color:var(--text);border:1px solid var(--line);border-radius:5px;padding:7px 5px}
+    .effects-bar{min-height:51px;max-height:112px;flex:none;background:#18212a;border-bottom:1px solid var(--line);padding:8px 13px;display:flex;flex-wrap:wrap;column-gap:13px;row-gap:8px;align-items:center;align-content:center;overflow-y:auto;white-space:nowrap}.effects-bar .bar-group{display:flex;align-items:center;gap:12px;white-space:nowrap;flex:none}.effects-bar .button{padding:7px 10px}.effects-bar select{background:#101820;color:var(--text);border:1px solid var(--line);padding:7px;border-radius:5px}.effects-bar input[type=range]{width:92px;accent-color:var(--accent)}.workspace{position:relative;flex:1;min-height:0;overflow:auto;background:#121820;overscroll-behavior:contain}.work-inner{width:max-content;min-width:100%;height:max-content;min-height:100%;display:grid;place-items:center;padding:65px;box-sizing:border-box}.canvas-wrap{position:relative;flex:none;box-shadow:0 15px 60px #000b,0 0 0 1px #5e6975;background-color:#fff;background-image:linear-gradient(45deg,#e5e5e5 25%,transparent 25%),linear-gradient(-45deg,#e5e5e5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e5 75%),linear-gradient(-45deg,transparent 75%,#e5e5e5 75%);background-position:0 0,0 9px,9px -9px,-9px 0;background-size:18px 18px}.canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}#selectionCanvas{pointer-events:none}.workspace.drag-over:after{content:"Drop images here to add them as layers";position:fixed;inset:130px 310px 42px 90px;display:grid;place-items:center;font-size:20px;font-weight:700;color:var(--accent);background:#20372fe3;border:3px dashed var(--accent);pointer-events:none;z-index:9}
+    .status{height:34px;flex:none;display:flex;align-items:center;gap:15px;padding:0 15px;background:#1a222c;border-top:1px solid var(--line);color:var(--muted);font-size:11px}.status .hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.status .zoomrow{margin-left:auto;display:flex;align-items:center;gap:5px}.status .zoomrow button{padding:3px 8px}.status strong{color:var(--text);font-variant-numeric:tabular-nums}
+    .sidebar{background:#1a222c;border-left:1px solid var(--line);min-height:0;display:flex;flex-direction:column}.side-head{padding:16px 14px 10px;display:flex;align-items:center;justify-content:space-between}.side-head h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0}.side-group{padding:0 13px 12px;border-bottom:1px solid var(--line)}.layer-actions{display:flex;flex-wrap:wrap;gap:5px}.layer-actions .button{flex:1;padding:7px 6px}.layer-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.layer-controls label{display:block;font-size:10px;color:var(--muted);margin-bottom:5px}.layer-controls select{width:100%}.layer-controls input[type=range]{width:100%;accent-color:var(--accent)}.layer-list{overflow:auto;flex:1;padding:9px}.layer-row{display:flex;align-items:center;gap:7px;padding:8px 6px;border:1px solid transparent;border-radius:7px;min-height:72px}.layer-row.selected{background:#2b3542;border-color:#526576}.layer-row:hover:not(.selected){background:#222b36}.eye{width:20px;padding:2px;background:transparent;color:var(--muted);border:0}.eye:hover{color:var(--text)}.layer-thumbnails{display:flex;align-items:center;gap:4px}.thumb{display:block;cursor:pointer;width:45px;height:45px;border:2px solid #505e6d;background:repeating-conic-gradient(#f6f6f6 0% 25%,#c7cbd0 0% 50%) 50% / 12px 12px}.thumb.selected{border:2px solid var(--accent);box-shadow:0 0 0 1px #15241d}.layer-info{flex:1;min-width:0}.layer-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.layer-meta{font-size:10px;color:var(--muted);margin-top:5px}.layer-rename{width:100%;border:1px solid var(--accent);background:#101720;color:var(--text);padding:4px}.panel-foot{padding:14px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}.panel-foot p{margin:0 0 9px}.panel-foot kbd{font:inherit;border:1px solid var(--line);background:#222b35;border-radius:3px;padding:1px 4px;color:var(--text)}.mini-link{background:none;border:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer}
+    .toast{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);background:#2a3c35;color:#e9fff3;border:1px solid #577b68;border-radius:7px;padding:10px 14px;z-index:30;box-shadow:0 9px 25px #0009;max-width:min(530px,90vw);text-align:center}.toast[hidden],.modal-back[hidden]{display:none}.modal-back{position:fixed;inset:0;background:#000a;z-index:20;display:grid;place-items:center;padding:20px}.modal{width:min(470px,95vw);border:1px solid #4d5a65;background:#202a35;border-radius:12px;box-shadow:0 20px 90px #000a;padding:24px}.modal h2{margin:0 0 5px;font-size:22px}.modal p{color:var(--muted);line-height:1.55}.modal label{display:block;margin:14px 0 5px;color:var(--muted)}.modal input{display:block;width:100%;background:#101720;color:var(--text);border:1px solid #506070;padding:10px;border-radius:5px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.modal ul{padding-left:21px;color:var(--muted);line-height:1.8}.small-note{color:var(--warn)!important;font-size:12px}
+    @media(max-width:1190px){.localtag{display:none}.topbar{gap:8px;padding:0 8px}.toolbar-actions{gap:4px}.toolbar-actions .button{padding:7px 7px}.main{grid-template-columns:66px minmax(0,1fr) 260px}.sidebar{font-size:12px}.tools .tool{width:52px}.settings{gap:9px;padding:7px 9px}.control input[type=range]{width:68px}}
+    @media(max-width:860px){.main{grid-template-columns:58px minmax(0,1fr) 215px}.brand small{display:none}.docname{display:none}.tool{width:48px}.layer-controls{grid-template-columns:1fr}.sidebar .thumb{width:36px;height:36px}.topbar{overflow-x:auto}.settings{overflow-x:auto}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><b>IDEA PIXEL LAB</b><small>OFFLINE IMAGE STUDIO · v0.2 BETA</small></div>
+    <label for="docName" class="sr-only" style="position:absolute;clip:rect(0,0,0,0)">Project name</label>
+    <input id="docName" class="docname" value="Untitled Composition" aria-label="Project name">
+    <nav class="toolbar-actions" aria-label="File actions">
+      <button class="button" id="newBtn" title="New canvas">New</button>
+      <button class="button" id="importBtn" title="Add images as layers (Ctrl+O)">Import Image</button>
+      <button class="button" id="psdBtn" title="Open a Photoshop PSD as editable raster layers">Open PSD</button>
+      <button class="button" id="openBtn" title="Open an editable .json project">Open Project</button>
+      <button class="button" id="saveBtn" title="Save editable project (Ctrl+S)">Save Project</button>
+      <button class="button primary" id="exportBtn" title="Export a flattened PNG">Export PNG</button>
+      <button class="button" id="jpgBtn" title="Export a flattened JPEG">JPG</button>
+    </nav>
+    <div class="spacer"></div>
+    <span class="localtag">100% local · no uploads</span>
+    <button class="button flat" id="demoBtn" title="Load example design">Sample</button>
+    <button class="button flat" id="helpBtn" title="Help and shortcuts">Help</button>
+  </header>
+  <main class="main">
+    <aside class="tools" aria-label="Editing tools">
+      <button class="tool active" data-tool="move" title="Move active layer (V)" aria-pressed="true"><b>V</b><span>Move</span></button>
+      <button class="tool" data-tool="brush" title="Paint with a brush (B)" aria-pressed="false"><b>B</b><span>Brush</span></button>
+      <button class="tool" data-tool="eraser" title="Erase pixels (E)" aria-pressed="false"><b>E</b><span>Eraser</span></button>
+      <button class="tool" data-tool="select" title="Rectangle selection (M)" aria-pressed="false"><b>M</b><span>Select</span></button>
+      <button class="tool" data-tool="lasso" title="Freehand lasso selection (L)" aria-pressed="false"><b>L</b><span>Lasso</span></button>
+      <button class="tool" data-tool="wand" title="Contiguous magic wand (W)" aria-pressed="false"><b>W</b><span>Wand</span></button>
+      <button class="tool" data-tool="range" title="Select all similar colors (C)" aria-pressed="false"><b>C</b><span>Range</span></button>
+      <div class="tool-separator"></div>
+      <button class="tool" id="deselectTool" title="Clear selection (Ctrl+D)"><b>×</b><span>Deselect</span></button>
+      <div class="toolhelp">B · V · E<br>M · L · W · C<br>Ctrl+Z undo</div>
+    </aside>
+    <section class="center" aria-label="Editing workspace">
+      <div class="settings">
+        <strong id="currentTool">Move</strong>
+        <div class="control"><label for="brushSize">Size</label><input id="brushSize" type="range" min="1" max="200" value="35"><output id="brushSizeOut">35</output></div>
+        <div class="control"><label for="brushHardness">Hardness</label><input id="brushHardness" type="range" min="0" max="100" value="80"><output id="hardnessOut">80%</output></div>
+        <div class="control"><label for="brushOpacity">Brush opacity</label><input id="brushOpacity" type="range" min="1" max="100" value="100"><output id="brushOpacityOut">100%</output></div>
+        <div class="control"><label for="brushPreset">Brush</label><select id="brushPreset" aria-label="Brush preset"><option value="round">Round</option><option value="airbrush">Airbrush</option><option value="marker">Marker</option><option value="chalk">Chalk</option><option value="dry">Dry brush</option><option value="spray">Spray</option><option value="splatter">Splatter</option><option value="pixel">Pixel</option></select></div>
+        <div class="control"><label for="brushColor">Color</label><input id="brushColor" type="color" value="#ed805f" aria-label="Brush color"></div>
+        <div class="control"><label for="maskMode">Mask paint</label><select id="maskMode" aria-label="Mask brush effect"><option value="hide">Hide (black)</option><option value="reveal">Reveal (white)</option></select></div>
+        <span id="targetText" style="color:var(--muted);font-size:11px">Editing pixels</span>
+      </div>
+      <div class="effects-bar" aria-label="Selection and filter controls">
+        <div class="bar-group"><strong style="color:var(--accent);font-size:11px">SELECT</strong>
+        <label class="control" for="tolerance">Tolerance <input id="tolerance" type="range" min="0" max="140" value="36"><output id="toleranceOut">36</output></label>
+        <label class="control" for="feather">Feather <input id="feather" type="range" min="0" max="16" value="2"><output id="featherOut">2 px</output></label>
+        <label class="control" for="sampleSource">Sample <select id="sampleSource"><option value="active">Layer</option><option value="merged">Merged</option></select></label>
+        <button class="button minor" id="invertSelectBtn">Invert</button>
+        <button class="button minor" id="removeBgBtn" title="Hide uniform edge-connected backgrounds using a layer mask">Remove BG</button>
+        </div>
+        <div class="bar-group"><strong style="color:var(--accent);font-size:11px">EFFECTS</strong>
+        <label class="control" for="effectType"><select id="effectType" aria-label="Pixel effect"><option value="grain">Film grain</option><option value="paper">Paper texture</option><option value="halftone">Halftone</option><option value="blur">Blur</option><option value="pixelate">Pixelate</option><option value="wave">Wave warp</option><option value="bulge">Bulge warp</option></select></label>
+        <label class="control" for="effectAmount">Amount <input id="effectAmount" type="range" min="1" max="100" value="30"><output id="effectAmountOut">30</output></label>
+        <button class="button minor" id="applyEffectBtn">Apply effect</button></div>
+      </div>
+      <div class="workspace" id="workspace" aria-label="Image canvas, drop images here">
+        <div class="work-inner"><div class="canvas-wrap" id="canvasWrap">
+          <canvas id="displayCanvas" width="1200" height="800" aria-label="Editable image canvas"></canvas>
+          <canvas id="selectionCanvas" width="1200" height="800" aria-hidden="true"></canvas>
+        </div></div>
+      </div>
+      <div class="status">
+        <span id="docSize">1200 × 800 px</span>
+        <span class="hint" id="statusText">Import a photo, or paint on the transparent Artwork layer.</span>
+        <span class="zoomrow"><button class="button minor" id="zoomOutBtn" aria-label="Zoom out">−</button><strong id="zoomText">75%</strong><button class="button minor" id="zoomInBtn" aria-label="Zoom in">+</button><button class="button minor" id="fitBtn">Fit</button></span>
+      </div>
+    </section>
+    <aside class="sidebar" aria-label="Layers panel">
+      <div class="side-head"><h2>Layers</h2><span id="layerCount" style="color:var(--muted);font-size:11px">2 layers</span></div>
+      <div class="side-group">
+        <div class="layer-actions">
+          <button class="button minor" id="addLayerBtn" title="Add transparent layer">+ Layer</button>
+          <button class="button minor" id="addMaskBtn" title="Add a white reveal-all mask">+ Mask</button>
+          <button class="button minor" id="duplicateBtn" title="Duplicate layer">Copy</button>
+        </div>
+        <div class="layer-actions" style="margin-top:6px">
+          <button class="button minor" id="replaceBtn" title="Replace selected layer pixels using an image; imported PSD smart-object transforms are not preserved">Replace</button>
+          <button class="button minor" id="upBtn" title="Move selected layer up">Up</button>
+          <button class="button minor" id="downBtn" title="Move selected layer down">Down</button>
+          <button class="button minor" id="deleteBtn" title="Delete selected layer">Delete</button>
+        </div>
+        <div class="layer-controls">
+          <div><label for="blendSelect">Blend mode</label><select id="blendSelect">
+            <option value="source-over">Normal</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="darken">Darken</option><option value="lighten">Lighten</option><option value="color-dodge">Color Dodge</option><option value="color-burn">Color Burn</option><option value="soft-light">Soft Light</option><option value="hard-light">Hard Light</option><option value="difference">Difference</option><option value="exclusion">Exclusion</option><option value="hue">Hue</option><option value="saturation">Saturation</option><option value="color">Color</option><option value="luminosity">Luminosity</option>
+          </select></div>
+          <div><label for="layerOpacity">Layer opacity: <span id="layerOpacityOut">100%</span></label><input id="layerOpacity" type="range" min="0" max="100" value="100"></div>
+        </div>
+      </div>
+      <div class="layer-list" id="layerList" aria-label="Layer stack, top layer first"></div>
+      <div class="panel-foot">
+        <p><strong style="color:var(--text)">Mask basics:</strong> add a mask, click its thumbnail, then paint black to hide or white to reveal without deleting pixels.</p>
+        <p><kbd>Ctrl+S</kbd> saves your <strong>editable</strong> project. PNG/JPG exports are flattened.</p>
+        <button class="mini-link" id="moreHelpBtn">Shortcuts and instructions</button>
+      </div>
+    </aside>
+  </main>
+</div>
+<input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+<input id="projectInput" type="file" accept=".json,.ideapixel,application/json" hidden>
+<input id="psdInput" type="file" accept=".psd,image/vnd.adobe.photoshop,application/octet-stream" hidden>
+<input id="replaceInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="modal-back" id="newModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newHeading">
+    <h2 id="newHeading">New canvas</h2><p>Set a practical image size for your classroom project. Large canvases can slow down older computers.</p>
+    <label for="newName">Name</label><input id="newName" value="Untitled Composition" maxlength="100">
+    <label for="newWidth">Width in pixels</label><input id="newWidth" type="number" min="64" max="4096" value="1200">
+    <label for="newHeight">Height in pixels</label><input id="newHeight" type="number" min="64" max="4096" value="800">
+    <div class="modal-actions"><button class="button" id="cancelNewBtn">Cancel</button><button class="button primary" id="confirmNewBtn">Create Canvas</button></div>
+  </div>
+</div>
+<div class="modal-back" id="helpModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpHeading">
+    <h2 id="helpHeading">Using IDEA Pixel Lab</h2>
+    <p>This is a lightweight, local raster editor. Images never leave your browser; save your work frequently.</p>
+    <ul>
+      <li><strong>V</strong> Move the currently selected layer (image and mask together); arrow keys nudge by 1 px or Shift+arrow by 10 px.</li>
+      <li><strong>B / E</strong> Brush and eraser. Change brush size, hardness, and opacity along the top.</li>
+      <li><strong>W / C</strong> Click a color for contiguous Magic Wand or all-image Color Range selection. Adjust Tolerance, Feather and the source (active Layer or Merged).</li>
+      <li><strong>Remove BG</strong> isolates solid-color backgrounds connected to the image edges. For photos with complex backgrounds use a mask and refine with brushes.</li>
+      <li><strong>Brush presets</strong> include round, airbrush, marker, chalk, dry brush, spray, splatter and pixel. Use Effects for grain, texture, halftone, blur and warping.</li>
+      <li><strong>PSD mockups:</strong> Open PSD imports many 8-bit RGB/Grayscale documents into raster layers, including available masks and blend modes. Use Replace to swap a layer's raster artwork inside its existing bounds. Smart objects, editable text, clipping groups and Photoshop layer effects are not recreated faithfully.</li>
+      <li><strong>M / L</strong> Rectangle selection or freehand lasso. Painting affects only the selected area. Press <strong>Delete</strong> to clear selected pixels.</li>
+      <li><strong>Mask:</strong> select an area with M or L, then click + Mask to hide everything outside the selection; without a selection, + Mask starts fully visible. Click the mask thumbnail, use B and choose Hide (black) or Reveal (white). Click the image thumbnail to paint pixels again.</li>
+      <li><strong>Layers:</strong> use Up/Down to reorder, Copy to duplicate, choose a blend mode and change layer opacity. Double-click a layer name to rename it.</li>
+      <li><strong>Undo:</strong> Ctrl+Z; <strong>Redo:</strong> Ctrl+Shift+Z or Ctrl+Y; <strong>Deselect:</strong> Ctrl+D.</li>
+      <li><strong>Save:</strong> Ctrl+S downloads a layered .json project; Open Project resumes editing. Export PNG/JPG creates a flattened image. Save frequently; offline tabs are not backed up.</li>
+      <li>Drag images onto the canvas or paste an image from your clipboard to add a new layer.</li>
+    </ul>
+    <p class="small-note">PSD import is best-effort and rasterized: no smart-object replacement workflow, PSD export, live text or exact Photoshop effects. Background removal is color-based, not AI. Keep original PSD files.</p>
+    <div class="modal-actions"><button class="button primary" id="closeHelpBtn">Close</button></div>
+  </div>
+</div>
+<script>
+'use strict';
+(function () {
+  const $ = id => document.getElementById(id);
+  const display = $('displayCanvas');
+  const dctx = display.getContext('2d');
+  const selectionCanvas = $('selectionCanvas');
+  const sctx = selectionCanvas.getContext('2d');
+  const workspace = $('workspace');
+  const wrap = $('canvasWrap');
+  const docName = $('docName');
+  let width = 1200, height = 800, zoom = 1, nextId = 1;
+  let layers = [], activeId = null, activeTarget = 'image';
+  let tool = 'move', selection = null, dragging = null, spaceHeld = false;
+  let history = [], historyIndex = -1, restoreBusy = false, changed = false;
+  let toastTimer = null, renderQueued = false, loadingImages = false;
+  const composite = document.createElement('canvas');
+  const cctx = composite.getContext('2d', {willReadFrequently:false});
+  const scratch = document.createElement('canvas');
+  const tctx = scratch.getContext('2d');
+  const MAX_DOC = 4096, MAX_HISTORY = 13, MAX_LAYERS = 35;
+  const selectionStroke = document.createElement('canvas');
+  const selectionStrokeCtx = selectionStroke.getContext('2d');
+
+  function newBitmap() { const c=document.createElement('canvas'); c.width=width;c.height=height; return c; }
+  function copyBitmap(b) { const c=newBitmap(); c.getContext('2d').drawImage(b,0,0);return c; }
+  function makeLayer(name, {white=false}={}) {
+    const bitmap=newBitmap();
+    if(white){const ctx=bitmap.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);}
+    return {id:nextId++,name,bitmap,mask:null,visible:true,opacity:1,blend:'source-over'};
+  }
+  function selectedLayer() {return layers.find(l=>l.id===activeId)||null;}
+  function normName(s) {return String(s||'Untitled Composition').trim().slice(0,100)||'Untitled Composition';}
+  function safeFilename(s) {return normName(s).replace(/[^a-z0-9_\-. ]/gi,'').trim().replace(/\s+/g,'-')||'idea-project';}
+  function resizeDocument(w,h){width=w;height=h;[display,selectionCanvas,composite,scratch,selectionStroke].forEach(c=>{c.width=w;c.height=h;});$('docSize').textContent=`${w} × ${h} px`;changeZoom(zoom);}
+  function initialize(w=1200,h=800,name='Untitled Composition') {
+    resizeDocument(w,h); nextId=1;
+    const paper=makeLayer('Background', {white:true});
+    const art=makeLayer('Artwork');
+    layers=[paper,art];activeId=art.id;activeTarget='image';selection=null;
+    docName.value=normName(name);history=[];historyIndex=-1;changed=false;
+    renderSelection();renderLayersUI();setTool('move');commitHistory();changed=false;updateUnsaved();fitCanvas();
+    $('statusText').textContent='Import a photo, or paint on the transparent Artwork layer.';
+  }
+  function changeZoom(value){zoom=Math.min(4,Math.max(.1,value));wrap.style.width=(width*zoom)+'px';wrap.style.height=(height*zoom)+'px';$('zoomText').textContent=Math.round(zoom*100)+'%';renderSelection();}
+  function fitCanvas(){const w=workspace.clientWidth-120,h=workspace.clientHeight-120;if(w>0&&h>0)changeZoom(Math.min(1.5, Math.max(.1, Math.min(w/width,h/height))));}
+  function scheduleRender(){if(!renderQueued){renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;renderComposite();});}}
+  function renderComposite(){
+    cctx.clearRect(0,0,width,height);
+    for(const layer of layers){
+      if(!layer.visible)continue;
+      cctx.save();cctx.globalAlpha=layer.opacity;cctx.globalCompositeOperation=layer.blend;
+      if(layer.mask){tctx.clearRect(0,0,width,height);tctx.globalCompositeOperation='source-over';tctx.drawImage(layer.bitmap,0,0);tctx.globalCompositeOperation='destination-in';tctx.drawImage(layer.mask,0,0);tctx.globalCompositeOperation='source-over';cctx.drawImage(scratch,0,0);}
+      else cctx.drawImage(layer.bitmap,0,0);
+      cctx.restore();
+    }
+    dctx.clearRect(0,0,width,height);dctx.drawImage(composite,0,0);
+  }
+  function selectionPath(ctx,sel){
+    ctx.beginPath();
+    if(sel.type==='poly'&&Array.isArray(sel.points)&&sel.points.length>=3){ctx.moveTo(sel.points[0].x,sel.points[0].y);for(const p of sel.points.slice(1))ctx.lineTo(p.x,p.y);ctx.closePath();}
+    else if(sel.type==='rect')ctx.rect(sel.x,sel.y,sel.w,sel.h);
+  }
+  function polygonSelection(points){
+    if(points.length<3)return null;
+    const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+    const r=normalizeRect(Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys));
+    if(r.w<2||r.h<2)return null;
+    return {...r,type:'poly',points:points.map(p=>({x:Math.max(0,Math.min(width,p.x)),y:Math.max(0,Math.min(height,p.y))}))};
+  }
+  function createMask(layer){const c=newBitmap(),ctx=c.getContext('2d');ctx.fillStyle='#ffffff';if(selection){
+    if(selection.type==='pixels')ctx.drawImage(selection.canvas,0,0);
+    else{selectionPath(ctx,selection);ctx.fill();}
+  }else ctx.fillRect(0,0,width,height);layer.mask=c;}
+  function activeLabel(){return activeTarget==='mask'?'Editing mask':'Editing pixels';}
+  function updateControls(){
+    const layer=selectedLayer();
+    $('blendSelect').disabled=!layer;$('layerOpacity').disabled=!layer;
+    $('duplicateBtn').disabled=!layer||layers.length>=MAX_LAYERS;
+    $('replaceBtn').disabled=!layer;
+    $('deleteBtn').disabled=!layer||layers.length<=1;
+    $('addMaskBtn').disabled=!layer||!!layer.mask;
+    $('addMaskBtn').textContent=layer&&layer.mask?'Mask added':'+ Mask';
+    const idx=layers.indexOf(layer);$('upBtn').disabled=idx<0||idx===layers.length-1;$('downBtn').disabled=idx<=0;
+    if(layer){$('blendSelect').value=layer.blend;$('layerOpacity').value=Math.round(layer.opacity*100);$('layerOpacityOut').textContent=Math.round(layer.opacity*100)+'%';}
+    $('targetText').textContent=activeLabel();$('maskMode').disabled=activeTarget!=='mask';
+    $('layerCount').textContent=layers.length+' layer'+(layers.length===1?'':'s');
+    $('undoBtn')?.setAttribute('disabled',historyIndex<1?'':'false');
+  }
+  function thumbFor(bitmap,mask=false){
+    const thumb=document.createElement('canvas');thumb.width=90;thumb.height=90;thumb.className='thumb';
+    const ctx=thumb.getContext('2d');
+    if(mask){ctx.fillStyle='#000';ctx.fillRect(0,0,90,90);}
+    if(bitmap){const k=Math.min(88/width,88/height);const w=width*k,h=height*k;ctx.drawImage(bitmap,(90-w)/2,(90-h)/2,w,h);}
+    return thumb;
+  }
+  function renderLayersUI(){
+    const list=$('layerList');list.replaceChildren();
+    for(const layer of [...layers].reverse()){
+      const row=document.createElement('div');row.className='layer-row'+(layer.id===activeId?' selected':'');
+      const eye=document.createElement('button');eye.className='eye';eye.title=layer.visible?'Hide layer':'Show layer';eye.setAttribute('aria-label',eye.title);eye.textContent=layer.visible?'◉':'○';eye.addEventListener('click',()=>{layer.visible=!layer.visible;commitHistory();renderLayersUI();scheduleRender();});row.appendChild(eye);
+      const thumbs=document.createElement('div');thumbs.className='layer-thumbnails';
+      const imageThumb=thumbFor(layer.bitmap);imageThumb.title='Edit layer image';imageThumb.setAttribute('role','button');imageThumb.setAttribute('tabindex','0');imageThumb.setAttribute('aria-label','Edit pixels of '+layer.name);
+      if(layer.id===activeId&&activeTarget==='image')imageThumb.classList.add('selected');
+      const selectImage=()=>{activeId=layer.id;activeTarget='image';renderLayersUI();};imageThumb.addEventListener('click',selectImage);imageThumb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectImage();}});thumbs.appendChild(imageThumb);
+      if(layer.mask){const maskThumb=thumbFor(layer.mask,true);maskThumb.title='Edit mask; black hides, white reveals';maskThumb.setAttribute('role','button');maskThumb.setAttribute('tabindex','0');maskThumb.setAttribute('aria-label','Edit mask of '+layer.name);if(layer.id===activeId&&activeTarget==='mask')maskThumb.classList.add('selected');const selectMask=()=>{activeId=layer.id;activeTarget='mask';renderLayersUI();};maskThumb.addEventListener('click',selectMask);maskThumb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectMask();}});thumbs.appendChild(maskThumb);}
+      row.appendChild(thumbs);
+      const info=document.createElement('div');info.className='layer-info';
+      const nm=document.createElement('div');nm.className='layer-name';nm.textContent=layer.name;nm.title='Double-click to rename';nm.addEventListener('dblclick',()=>{
+        const inp=document.createElement('input');inp.className='layer-rename';inp.value=layer.name;nm.replaceWith(inp);inp.focus();inp.select();let done=false;
+        const finish=save=>{if(done)return;done=true;if(save&&inp.value.trim()&&inp.value.trim()!==layer.name){layer.name=inp.value.trim().slice(0,80);commitHistory();}renderLayersUI();};
+        inp.addEventListener('blur',()=>finish(true));inp.addEventListener('keydown',e=>{if(e.key==='Enter')finish(true);if(e.key==='Escape')finish(false);});
+      });
+      const meta=document.createElement('div');meta.className='layer-meta';meta.textContent=(layer.mask?'Layer + mask':'Pixel layer')+(layer.visible?'':' · hidden');
+      info.append(nm,meta);row.appendChild(info);row.addEventListener('click',e=>{if(e.target.closest('button,.thumb,input'))return;activeId=layer.id;activeTarget='image';renderLayersUI();});
+      list.appendChild(row);
+    }
+    updateControls();
+  }
+  function setTool(t){tool=t;for(const b of document.querySelectorAll('[data-tool]')){const on=b.dataset.tool===t;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));}
+    $('currentTool').textContent=({move:'Move',brush:'Brush',eraser:'Eraser',select:'Select',lasso:'Lasso',wand:'Magic Wand',range:'Color Range'})[t];
+    display.style.cursor=t==='move'?'move':'crosshair';$('statusText').textContent=({move:'Drag to move the selected layer.',brush:'Paint on pixels, or select a mask thumbnail to paint its visibility.',eraser:'Erase pixels from the active layer.',select:'Drag to create a rectangular selection. Ctrl+D clears it.',lasso:'Draw around an area to select it.',wand:'Click a color to select touching similar pixels. Adjust Tolerance and Feather.',range:'Click a color to select all matching pixels, including disconnected areas.'})[t];}
+  function renderSelection(){sctx.clearRect(0,0,width,height);if(!selection)return;
+    if(selection.type==='pixels'){
+      const a=selection.alpha,w=width,h=height,out=sctx.createImageData(w,h),d=out.data;
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const i=y*w+x;if(a[i]<100)continue;
+        if(x&&x<w-1&&y&&y<h-1&&a[i-1]>=100&&a[i+1]>=100&&a[i-w]>=100&&a[i+w]>=100)continue;
+        const k=i*4;const white=(Math.floor(x/5)+Math.floor(y/5))%2===0;d[k]=white?255:8;d[k+1]=white?255:8;d[k+2]=white?255:8;d[k+3]=255;
+      }sctx.putImageData(out,0,0);return;
+    }
+    sctx.save();selectionPath(sctx,selection);sctx.setLineDash([7/zoom,5/zoom]);sctx.lineWidth=1.2/zoom;sctx.strokeStyle='#111';sctx.stroke();sctx.lineDashOffset=6/zoom;sctx.strokeStyle='#fff';sctx.stroke();sctx.restore();
+  }
+  function normalizeRect(x,y,x2,y2){const a=Math.max(0,Math.min(width,Math.min(x,x2))),b=Math.max(0,Math.min(height,Math.min(y,y2)));const c=Math.max(0,Math.min(width,Math.max(x,x2))),d=Math.max(0,Math.min(height,Math.max(y,y2)));return{type:'rect',x:Math.floor(a),y:Math.floor(b),w:Math.ceil(c-a),h:Math.ceil(d-b)};}
+  function getPoint(e){const r=display.getBoundingClientRect();return{x:(e.clientX-r.left)*width/r.width,y:(e.clientY-r.top)*height/r.height};}
+  function hexRgba(hex,a){let c=hex.replace('#','');return `rgba(${parseInt(c.slice(0,2),16)},${parseInt(c.slice(2,4),16)},${parseInt(c.slice(4,6),16)},${a})`;}
+  function dab(ctx,x,y,isMask,erase){
+    const size=Number($('brushSize').value),r=Math.max(.5,size/2),hard=Number($('brushHardness').value)/100;
+    const alpha=Number($('brushOpacity').value)/100,col=isMask?'#ffffff':$('brushColor').value;
+    const rgba=(a)=>hexRgba(col,Math.max(0,Math.min(1,a)));
+    const preset=$('brushPreset').value;
+    if(preset==='pixel'){ctx.fillStyle=rgba(alpha);ctx.fillRect(Math.round(x-r),Math.round(y-r),Math.max(1,size),Math.max(1,size));return;}
+    if(preset==='chalk'||preset==='spray'||preset==='splatter'){
+      const count=preset==='spray'?Math.max(18,Math.min(240,Math.round(size*1.5))):preset==='chalk'?Math.max(25,Math.min(180,Math.round(size*1.4))):Math.max(8,Math.round(size*.28));
+      for(let i=0;i<count;i++){
+        const theta=Math.random()*2*Math.PI,rad=Math.sqrt(Math.random())*(preset==='splatter'?r*1.5:r);
+        const sx=x+Math.cos(theta)*rad,sy=y+Math.sin(theta)*rad;
+        const dot=preset==='spray'?Math.max(.45,size*.012):preset==='chalk'?Math.max(.7,size*.05):Math.max(.8,Math.random()*size*.14);
+        ctx.beginPath();ctx.fillStyle=rgba(alpha*(preset==='spray'?.45:preset==='chalk'?.65:.8));ctx.arc(sx,sy,dot,0,2*Math.PI);ctx.fill();
+      }return;
+    }
+    if(preset==='dry'){
+      for(let i=0;i<Math.max(5,Math.min(40,Math.round(size*.25)));i++){
+        const off=(Math.random()-.5)*size;
+        ctx.strokeStyle=rgba(alpha*(.3+Math.random()*.65));ctx.lineWidth=Math.max(.6,size*.017);
+        ctx.beginPath();ctx.moveTo(x-r+Math.random()*r, y+off);ctx.lineTo(x+r*(.5+Math.random()*.5),y+off+(Math.random()-.5)*size*.1);ctx.stroke();
+      }return;
+    }
+    if(preset==='marker'){
+      ctx.fillStyle=rgba(alpha*.65);ctx.beginPath();ctx.ellipse(x,y,r,Math.max(.6,r*.55),-.28,0,2*Math.PI);ctx.fill();return;
+    }
+    const soft=preset==='airbrush'?.05:hard;
+    if(soft>=.995){ctx.fillStyle=rgba(alpha);ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);ctx.fill();return;}
+    const grad=ctx.createRadialGradient(x,y,r*soft,x,y,Math.max(.5,r));grad.addColorStop(0,rgba(alpha));grad.addColorStop(1,rgba(0));ctx.fillStyle=grad;ctx.fillRect(x-r,y-r,2*r,2*r);
+  }
+  function paintSegment(a,b){
+    const layer=selectedLayer();if(!layer||!layer.visible)return;
+    const isMask=activeTarget==='mask';if(isMask&&!layer.mask)return;
+    const dest=(isMask?layer.mask:layer.bitmap).getContext('2d');const erase=tool==='eraser'||(isMask&&$('maskMode').value==='hide');
+    const size=Number($('brushSize').value),step=Math.max(1,size*.16);const dist=Math.hypot(b.x-a.x,b.y-a.y);const n=Math.max(1,Math.ceil(dist/step));
+    let ctx=dest;
+    if(selection?.type==='pixels'){
+      const pad=size*1.4+3,x=Math.max(0,Math.floor(Math.min(a.x,b.x)-pad)),y=Math.max(0,Math.floor(Math.min(a.y,b.y)-pad));
+      const rw=Math.min(width-x,Math.ceil(Math.abs(b.x-a.x)+pad*2)),rh=Math.min(height-y,Math.ceil(Math.abs(b.y-a.y)+pad*2));
+      selectionStrokeCtx.clearRect(x,y,rw,rh);ctx=selectionStrokeCtx;
+    }
+    ctx.save();ctx.globalCompositeOperation=selection?.type==='pixels'?'source-over':erase?'destination-out':'source-over';
+    if(selection&&selection.type!=='pixels'){selectionPath(ctx,selection);ctx.clip();}
+    for(let i=0;i<=n;i++){const q=i/n;dab(ctx,a.x+(b.x-a.x)*q,a.y+(b.y-a.y)*q,isMask,erase);}
+    ctx.restore();
+    if(selection?.type==='pixels'){
+      const pad=size*1.4+3,x=Math.max(0,Math.floor(Math.min(a.x,b.x)-pad)),y=Math.max(0,Math.floor(Math.min(a.y,b.y)-pad));
+      const rw=Math.min(width-x,Math.ceil(Math.abs(b.x-a.x)+pad*2)),rh=Math.min(height-y,Math.ceil(Math.abs(b.y-a.y)+pad*2));
+      selectionStrokeCtx.save();selectionStrokeCtx.globalCompositeOperation='destination-in';selectionStrokeCtx.drawImage(selection.canvas,x,y,rw,rh,x,y,rw,rh);selectionStrokeCtx.restore();
+      dest.save();dest.globalCompositeOperation=erase?'destination-out':'source-over';dest.drawImage(selectionStroke,x,y,rw,rh,x,y,rw,rh);dest.restore();
+    }
+    scheduleRender();
+  }
+  function startDrag(e){
+    if(e.button!==0&&e.button!==1)return;
+    if(loadingImages||restoreBusy)return;
+    if(spaceHeld||e.button===1){e.preventDefault();dragging={kind:'pan',x:e.clientX,y:e.clientY,left:workspace.scrollLeft,top:workspace.scrollTop};display.setPointerCapture(e.pointerId);return;}
+    const point=getPoint(e);if(point.x<0||point.y<0||point.x>width||point.y>height)return;
+    const layer=selectedLayer();if(!layer)return;
+    if(tool==='select'){dragging={kind:'select',start:point};selection=normalizeRect(point.x,point.y,point.x,point.y);renderSelection();}
+    else if(tool==='lasso'){dragging={kind:'lasso',points:[point]};selection=null;renderSelection();}
+    else if(tool==='wand'||tool==='range'){selectByColor(point,tool==='wand');e.preventDefault();return;}
+    else if(tool==='move'){dragging={kind:'move',start:point,source:copyBitmap(layer.bitmap),mask:layer.mask?copyBitmap(layer.mask):null,layerId:layer.id,delta:{x:0,y:0}};}
+    else if(tool==='brush'||tool==='eraser'){if(activeTarget==='mask'&&!layer.mask){notify('Add a layer mask first.');return;}dragging={kind:'paint',last:point};paintSegment(point,point);}
+    else return;
+    display.setPointerCapture(e.pointerId);e.preventDefault();
+  }
+  function continueDrag(e){if(!dragging)return;
+    if(dragging.kind==='pan'){workspace.scrollLeft=dragging.left+dragging.x-e.clientX;workspace.scrollTop=dragging.top+dragging.y-e.clientY;return;}
+    const point=getPoint(e);
+    if(dragging.kind==='select'){selection=normalizeRect(dragging.start.x,dragging.start.y,point.x,point.y);renderSelection();}
+    else if(dragging.kind==='lasso'){
+      const prev=dragging.points[dragging.points.length-1];
+      if(Math.hypot(point.x-prev.x,point.y-prev.y)>3&&dragging.points.length<2500){dragging.points.push(point);selection=polygonSelection(dragging.points);renderSelection();}
+    }
+    else if(dragging.kind==='paint'){paintSegment(dragging.last,point);dragging.last=point;}
+    else if(dragging.kind==='move'){
+      const layer=selectedLayer();if(!layer||layer.id!==dragging.layerId)return;
+      const dx=Math.round(point.x-dragging.start.x),dy=Math.round(point.y-dragging.start.y);
+      if(dx===dragging.delta.x&&dy===dragging.delta.y)return;
+      const ctx=layer.bitmap.getContext('2d');ctx.clearRect(0,0,width,height);ctx.drawImage(dragging.source,dx,dy);
+      if(layer.mask&&dragging.mask){const mx=layer.mask.getContext('2d');mx.clearRect(0,0,width,height);mx.drawImage(dragging.mask,dx,dy);}
+      dragging.delta={x:dx,y:dy};scheduleRender();
+    }
+  }
+  function endDrag(e){if(!dragging)return;const last=dragging;dragging=null;
+    if(display.hasPointerCapture(e.pointerId))display.releasePointerCapture(e.pointerId);
+    if(last.kind==='paint'||(last.kind==='move'&&(last.delta.x||last.delta.y))){commitHistory();renderLayersUI();}
+    if(last.kind==='select'||last.kind==='lasso'){if(!selection||selection.w<2||selection.h<2)selection=null;renderSelection();}
+  }
+  function getState(){return {version:1,app:'IDEA Pixel Lab',name:normName(docName.value),width,height,activeId,activeTarget,selection:selection?.type==='pixels'?null:selection,layers:layers.map(l=>({id:l.id,name:l.name,visible:l.visible,opacity:l.opacity,blend:l.blend,image:l.bitmap.toDataURL('image/png'),mask:l.mask?l.mask.toDataURL('image/png'):null}))};}
+  function commitHistory(){if(restoreBusy)return;let state;try{state=JSON.stringify(getState());}catch(e){notify('Unable to make an undo snapshot; this document may be too large.');return;}
+    if(history[historyIndex]===state)return;
+    history=history.slice(0,historyIndex+1);history.push(state);
+    while(history.length>MAX_HISTORY||history.length>1&&history.reduce((n,v)=>n+v.length,0)>80*1024*1024)history.shift();
+    historyIndex=history.length-1;changed=true;updateUnsaved();
+  }
+  function updateUnsaved(){document.title=(changed?'* ':'')+normName(docName.value)+' — IDEA Pixel Lab';}
+  function decodeImage(src){return new Promise((resolve,reject)=>{if(typeof src!=='string'||!/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(src)){reject(Error('Invalid embedded image'));return;}const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('Invalid image data'));im.src=src;});}
+  async function restoreState(raw,resetHistory=false){
+    if(restoreBusy)return false;
+    const state=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!state||state.app!=='IDEA Pixel Lab'||state.version!==1||!Number.isInteger(state.width)||!Number.isInteger(state.height)||state.width<64||state.height<64||state.width>MAX_DOC||state.height>MAX_DOC||!Array.isArray(state.layers)||state.layers.length<1||state.layers.length>MAX_LAYERS)throw Error('Not a supported IDEA Pixel Lab project.');
+    restoreBusy=true;
+    try{
+      const bitmaps=await Promise.all(state.layers.map(async l=>{
+        const src=await decodeImage(l.image);const mask=l.mask?await decodeImage(l.mask):null;return {src,mask,l};
+      }));
+      resizeDocument(state.width,state.height);nextId=1;
+      layers=bitmaps.map(({src,mask,l})=>{
+        const nl=makeLayer(typeof l.name==='string'?l.name.slice(0,80):'Layer');
+        if(Number.isInteger(l.id)&&l.id>0){nl.id=l.id;nextId=Math.max(nextId,l.id+1);}
+        nl.bitmap.getContext('2d').drawImage(src,0,0,width,height);
+        if(mask){nl.mask=newBitmap();nl.mask.getContext('2d').drawImage(mask,0,0,width,height);}
+        nl.visible=l.visible!==false;nl.opacity=typeof l.opacity==='number'?Math.min(1,Math.max(0,l.opacity)):1;
+        nl.blend=[...$('blendSelect').options].some(o=>o.value===l.blend)?l.blend:'source-over';return nl;
+      });
+      activeId=layers.some(l=>l.id===state.activeId)?state.activeId:layers[layers.length-1].id;
+      activeTarget=state.activeTarget==='mask'&&selectedLayer()?.mask?'mask':'image';
+      if(state.selection&&state.selection.type==='poly'&&Array.isArray(state.selection.points)&&state.selection.points.length>=3&&state.selection.points.length<=2500&&state.selection.points.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))){selection=polygonSelection(state.selection.points);}
+      else selection=state.selection&&Number.isFinite(state.selection.x)&&Number.isFinite(state.selection.y)&&Number.isFinite(state.selection.w)&&Number.isFinite(state.selection.h)?normalizeRect(state.selection.x,state.selection.y,state.selection.x+state.selection.w,state.selection.y+state.selection.h):null;
+      docName.value=normName(state.name);renderSelection();renderLayersUI();scheduleRender();changed=!resetHistory;updateUnsaved();
+      if(resetHistory){history=[];historyIndex=-1;}
+      return true;
+    }finally{restoreBusy=false;}
+  }
+  async function openProjectFile(file){
+    if(!file)return;
+    try{const data=await file.text();const ok=await restoreState(data,true);if(ok){commitHistory();changed=false;updateUnsaved();fitCanvas();notify('Editable project opened.');}}
+    catch(e){notify('Unable to open this project: '+e.message);}
+  }
+  async function undoRedo(delta){if(restoreBusy)return;const newIndex=historyIndex+delta;if(newIndex<0||newIndex>=history.length)return;
+    try{const worked=await restoreState(history[newIndex]);if(worked){historyIndex=newIndex;notify(delta<0?'Undid edit':'Redid edit');}}
+    catch(e){notify('Undo failed: '+e.message);}
+  }
+  function addLayer(name='Layer '+(layers.length+1),white=false,record=true){if(layers.length>=MAX_LAYERS){notify('Maximum 35 layers in this version.');return null;}const layer=makeLayer(name,{white});let idx=layers.findIndex(l=>l.id===activeId);layers.splice(idx+1,0,layer);activeId=layer.id;activeTarget='image';renderLayersUI();scheduleRender();if(record)commitHistory();return layer;}
+  function duplicateLayer(){const l=selectedLayer();if(!l||layers.length>=MAX_LAYERS)return;const nl=makeLayer(l.name+' copy');nl.bitmap.getContext('2d').drawImage(l.bitmap,0,0);if(l.mask)nl.mask=copyBitmap(l.mask);nl.opacity=l.opacity;nl.blend=l.blend;nl.visible=l.visible;layers.splice(layers.indexOf(l)+1,0,nl);activeId=nl.id;activeTarget='image';renderLayersUI();scheduleRender();commitHistory();}
+  function reorder(delta){const l=selectedLayer();const idx=layers.indexOf(l),j=idx+delta;if(idx<0||j<0||j>=layers.length)return;[layers[idx],layers[j]]=[layers[j],layers[idx]];renderLayersUI();scheduleRender();commitHistory();}
+  function deleteLayer(){if(layers.length<=1)return;const i=layers.findIndex(l=>l.id===activeId);if(i<0)return;layers.splice(i,1);activeId=layers[Math.max(0,i-1)].id;activeTarget='image';renderLayersUI();scheduleRender();commitHistory();}
+  function clearSelection(){if(!selection)return;selection=null;renderSelection();}
+  function nudgeLayer(dx,dy){const l=selectedLayer();if(!l)return;const orig=copyBitmap(l.bitmap),ctx=l.bitmap.getContext('2d');ctx.clearRect(0,0,width,height);ctx.drawImage(orig,dx,dy);if(l.mask){const mask=copyBitmap(l.mask),mc=l.mask.getContext('2d');mc.clearRect(0,0,width,height);mc.drawImage(mask,dx,dy);}scheduleRender();renderLayersUI();commitHistory();}
+  function deleteSelectedPixels(){const l=selectedLayer();if(!l||!selection)return;const canvas=activeTarget==='mask'?l.mask:l.bitmap;if(!canvas)return;const ctx=canvas.getContext('2d');if(selection.type==='pixels'){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(selection.canvas,0,0);ctx.restore();}else if(selection.type==='poly'){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.fillStyle='#fff';selectionPath(ctx,selection);ctx.fill();ctx.restore();}else ctx.clearRect(selection.x,selection.y,selection.w,selection.h);scheduleRender();renderLayersUI();commitHistory();notify('Selected area cleared.');}
+  function notify(message){const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.hidden=true;},3500);}
+  function downloadBlob(blob,filename){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+  function saveProject(){try{const blob=new Blob([JSON.stringify(getState())],{type:'application/json'});downloadBlob(blob,safeFilename(docName.value)+'.ideapixel.json');changed=false;updateUnsaved();notify('Layered project downloaded. Keep this JSON file to edit later.');}catch(e){notify('Unable to save: '+e.message);}}
+  function exportImage(type){renderComposite();let canvas=composite,mime='image/png',ext='png';if(type==='jpeg'){canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);ctx.drawImage(composite,0,0);mime='image/jpeg';ext='jpg';}
+    canvas.toBlob(blob=>{if(!blob){notify('Unable to export image.');return;}downloadBlob(blob,safeFilename(docName.value)+'.'+ext);notify('Exported flattened '+ext.toUpperCase()+'. Save a project JSON to preserve layers.');},mime,type==='jpeg'?.92:undefined);
+  }
+  function fileAsImage(file){return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(url);resolve(im);};im.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Could not read image: '+file.name));};im.src=url;
+  });}
+  async function importImages(files){
+    if(!files||!files.length||loadingImages)return;loadingImages=true;
+    try{let count=0;
+      for(const file of files){if(!['image/png','image/jpeg','image/webp','image/gif','image/bmp'].includes(file.type)&&!/(\.png|\.jpe?g|\.webp|\.gif|\.bmp)$/i.test(file.name))continue;if(layers.length>=MAX_LAYERS){notify('Layer limit reached; some images were skipped.');break;}
+        try{const im=await fileAsImage(file);const l=addLayer(file.name.replace(/\.[^.]+$/,'').slice(0,80),false,false);if(!l)break;
+          const scale=Math.min(1,width/im.width,height/im.height);const w=im.width*scale,h=im.height*scale;
+          l.bitmap.getContext('2d').drawImage(im,Math.round((width-w)/2),Math.round((height-h)/2),w,h);
+          commitHistory();renderLayersUI();scheduleRender();count++;
+        }catch(e){notify(e.message);}
+      }
+      if(count)notify(`Added ${count} image${count===1?'':'s'} as editable layer${count===1?'':'s'}.`);
+    }finally{loadingImages=false;}
+  }
+  function sample(){
+    if(!confirm('Load the sample design? This replaces the current canvas. Save your project first if needed.'))return;
+    initialize(1200,800,'Make More — Sample');
+    const paper=layers[0],art=layers[1];paper.name='Deep blue background';
+    const bg=paper.bitmap.getContext('2d');const grad=bg.createLinearGradient(0,0,1200,800);grad.addColorStop(0,'#202d68');grad.addColorStop(1,'#0e1736');bg.fillStyle=grad;bg.fillRect(0,0,1200,800);
+    art.name='Large color fields';const a=art.bitmap.getContext('2d');a.fillStyle='#f4b458';a.beginPath();a.arc(920,390,265,0,Math.PI*2);a.fill();a.fillStyle='#f28266';a.beginPath();a.arc(1000,490,200,0,Math.PI*2);a.fill();a.fillStyle='#9cddb9';a.fillRect(680,80,90,540);
+    const letters=addLayer('Typography');const c=letters.bitmap.getContext('2d');c.fillStyle='#fff9ed';c.font='900 146px system-ui, Arial';c.fillText('MAKE',83,308);c.fillText('MORE',83,453);c.fillStyle='#bad5d0';c.font='600 28px system-ui, Arial';c.fillText('IDEAS ARE MEANT TO BE MADE.',90,584);c.font='500 18px system-ui, Arial';c.fillText('A small canvas for big experiments',90,648);
+    createMask(art); // Example of editable reveal-all mask
+    activeId=letters.id;activeTarget='image';history=[];historyIndex=-1;commitHistory();changed=false;updateUnsaved();renderLayersUI();scheduleRender();fitCanvas();setTool('move');notify('Sample loaded. Try blend modes or paint on the color field mask.');
+  }
+  function showModal(id){$(id).hidden=false;const inp=$(id).querySelector('input,button');inp?.focus();}
+  function closeModal(id){$(id).hidden=true;}
+  // COLOR SELECTION: selections are local alpha masks; no network calls.
+  function selectionToAlpha(){
+    if(!selection)return new Uint8Array(width*height).fill(255);
+    if(selection.type==='pixels')return new Uint8Array(selection.alpha);
+    const c=newBitmap(),ctx=c.getContext('2d');ctx.fillStyle='#fff';selectionPath(ctx,selection);ctx.fill();
+    const img=ctx.getImageData(0,0,width,height).data,a=new Uint8Array(width*height);
+    for(let i=0;i<a.length;i++)a[i]=img[i*4+3];return a;
+  }
+  function pixelMaskCanvas(alpha){const c=newBitmap(),ctx=c.getContext('2d'),img=ctx.createImageData(width,height);
+    for(let i=0;i<alpha.length;i++){const k=i*4;img.data[k]=img.data[k+1]=img.data[k+2]=255;img.data[k+3]=alpha[i];}
+    ctx.putImageData(img,0,0);return c;
+  }
+  function makePixelSelection(alpha,feather=0){
+    let c=pixelMaskCanvas(alpha);
+    if(feather>0){const blurred=newBitmap(),ctx=blurred.getContext('2d');ctx.filter=`blur(${feather}px)`;ctx.drawImage(c,0,0);ctx.filter='none';ctx.drawImage(c,0,0);c=blurred;
+      const data=ctx.getImageData(0,0,width,height).data;alpha=new Uint8Array(width*height);for(let i=0;i<alpha.length;i++)alpha[i]=data[i*4+3];
+    }
+    selection={type:'pixels',canvas:c,alpha};renderSelection();
+  }
+  function invertSelection(){const a=selectionToAlpha();for(let i=0;i<a.length;i++)a[i]=255-a[i];makePixelSelection(a);notify('Selection inverted.');}
+  function pickSourcePixels(){const l=selectedLayer();if(!l)return null;
+    if($('sampleSource').value==='merged'){renderComposite();return cctx.getImageData(0,0,width,height).data;}
+    const canvas=activeTarget==='mask'&&l.mask?l.mask:l.bitmap;return canvas.getContext('2d').getImageData(0,0,width,height).data;
+  }
+  function matchingColor(data,idx,sample,tol){const i=idx*4;
+    if(data[i+3]<4||sample[3]<4)return data[i+3]<4&&sample[3]<4;
+    const dr=data[i]-sample[0],dg=data[i+1]-sample[1],db=data[i+2]-sample[2],da=(data[i+3]-sample[3])*.5;
+    return dr*dr+dg*dg+db*db+da*da<=3*tol*tol;
+  }
+  function floodMatches(data,seeds,tol,matchSamples){
+    const n=width*height,visited=new Uint8Array(n),result=new Uint8Array(n),queue=new Int32Array(n);let head=0,tail=0;
+    const matches=i=>{for(let j=0;j<matchSamples.length;j++)if(matchingColor(data,i,matchSamples[j],tol))return true;return false;};
+    const enqueue=i=>{if(i<0||i>=n||visited[i])return;visited[i]=1;if(matches(i)){queue[tail++]=i;result[i]=255;}};
+    for(let j=0;j<seeds.length;j++)enqueue(seeds[j]);
+    while(head<tail){const i=queue[head++],x=i%width;
+      if(x)enqueue(i-1);if(x<width-1)enqueue(i+1);if(i>=width)enqueue(i-width);if(i<n-width)enqueue(i+width);
+    }return {alpha:result,count:tail};
+  }
+  function selectByColor(point,contiguous){
+    const x=Math.floor(point.x),y=Math.floor(point.y),index=y*width+x,data=pickSourcePixels();if(!data)return;
+    const sample=Array.from(data.slice(index*4,index*4+4)),tol=Number($('tolerance').value);
+    let alpha,count=0;
+    if(contiguous){const result=floodMatches(data,[index],tol,[sample]);alpha=result.alpha;count=result.count;}
+    else{alpha=new Uint8Array(width*height);for(let i=0;i<alpha.length;i++)if(matchingColor(data,i,sample,tol)){alpha[i]=255;count++;}}
+    if(!count){notify('No pixels matched. Try a higher tolerance.');return;}
+    makePixelSelection(alpha,Number($('feather').value));notify(`${contiguous?'Magic Wand':'Color Range'} selected ${Math.round(count/(width*height)*100)}% of the canvas. Add a mask or paint inside the selection.`);
+  }
+  function opaqueBounds(data){let minX=width,minY=height,maxX=-1,maxY=-1;
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){if(data[(y*width+x)*4+3]>20){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+    return maxX<0?null:{minX,maxX,minY,maxY};
+  }
+  async function replaceLayerImage(file){
+    if(!file)return;const l=selectedLayer();if(!l)return;
+    try{
+      const im=await fileAsImage(file),ctx=l.bitmap.getContext('2d'),data=ctx.getImageData(0,0,width,height).data;
+      const box=opaqueBounds(data)||{minX:0,minY:0,maxX:width-1,maxY:height-1};
+      const w=box.maxX-box.minX+1,h=box.maxY-box.minY+1;
+      if(!confirm(`Replace pixels in "${l.name}" with ${file.name}? Existing pixels are replaced; the layer mask, opacity and blend mode are kept. This does not reproduce Photoshop smart-object perspective or lighting.`))return;
+      ctx.clearRect(0,0,width,height);ctx.drawImage(im,box.minX,box.minY,w,h);
+      renderLayersUI();scheduleRender();commitHistory();notify('Layer pixels replaced within existing bounds. Edit/move and use masks as needed.');
+    }catch(e){notify('Could not replace layer image: '+e.message);}
+  }
+  function removeBackground(){
+    const l=selectedLayer();if(!l){notify('Select an image layer first.');return;}
+    if(activeTarget==='mask'){notify('Select the image thumbnail before removing its background.');return;}
+    const data=l.bitmap.getContext('2d').getImageData(0,0,width,height).data;
+    const bounds=opaqueBounds(data);if(!bounds){notify('This layer has no visible image pixels.');return;}
+    const {minX,minY,maxX,maxY}=bounds,tol=Number($('tolerance').value);
+    // Samples are based on actual image bounds, not transparent canvas margins.
+    const coords=[[minX,minY],[maxX,minY],[minX,maxY],[maxX,maxY]];
+    const samples=coords.map(([x,y])=>Array.from(data.slice((y*width+x)*4,(y*width+x)*4+4))).filter(c=>c[3]>20);
+    if(!samples.length){notify('No edge colors found; try the Magic Wand.');return;}
+    const seeds=[];
+    for(let x=minX;x<=maxX;x++){seeds.push(minY*width+x,maxY*width+x);}
+    for(let y=minY+1;y<maxY;y++){seeds.push(y*width+minX,y*width+maxX);}
+    const {alpha,count}=floodMatches(data,seeds,tol,samples);
+    if(!count){notify('Could not identify a uniform edge background. Try Magic Wand instead.');return;}
+    const feather=Number($('feather').value);
+    let bgMask=pixelMaskCanvas(alpha);
+    if(feather){const blurred=newBitmap(),bc=blurred.getContext('2d');bc.filter=`blur(${feather}px)`;bc.drawImage(bgMask,0,0);bc.filter='none';bc.drawImage(bgMask,0,0);bgMask=blurred;}
+    if(!l.mask){l.mask=newBitmap();const m=l.mask.getContext('2d');m.fillStyle='#fff';m.fillRect(0,0,width,height);}
+    const maskCtx=l.mask.getContext('2d');maskCtx.save();maskCtx.globalCompositeOperation='destination-out';maskCtx.drawImage(bgMask,0,0);maskCtx.restore();
+    activeTarget='mask';selection=null;renderSelection();renderLayersUI();scheduleRender();commitHistory();
+    notify('Edge background hidden with an editable mask. Use black/white brushes to refine. Undo if too much was removed.');
+  }
+  function clamp8(x){return x<0?0:x>255?255:x;}
+  function applyEffect(){
+    const l=selectedLayer();if(!l){notify('Select a layer first.');return;}
+    if(activeTarget==='mask'){notify('Select the image thumbnail to apply a pixel effect.');return;}
+    const type=$('effectType').value,amount=Number($('effectAmount').value),ctx=l.bitmap.getContext('2d');
+    const src=ctx.getImageData(0,0,width,height),out=ctx.createImageData(width,height),s=src.data,d=out.data;
+    const mask=selection?selectionToAlpha():null;
+    if(type==='blur'){
+      const blur=newBitmap(),bctx=blur.getContext('2d');bctx.filter=`blur(${(amount/7).toFixed(1)}px)`;bctx.drawImage(l.bitmap,0,0);d.set(bctx.getImageData(0,0,width,height).data);
+    }else if(type==='wave'||type==='bulge'){
+      const centerX=width/2,centerY=height/2,radius=Math.min(width,height)*.65,amplitude=amount*.65;
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+        let u=x,v=y;
+        if(type==='wave'){u=x+Math.sin(y/(18+amount*.65))*amplitude;v=y+Math.sin(x/(35+amount*.9))*amplitude*.35;}
+        else{const dx=x-centerX,dy=y-centerY,r=Math.sqrt(dx*dx+dy*dy),f=Math.min(1,r/radius);if(f<1){const warp=1-(amount/100)*.7*(1-f*f);u=centerX+dx*warp;v=centerY+dy*warp;}}
+        const xi=Math.round(u),yi=Math.round(v),j=(y*width+x)*4;if(xi>=0&&xi<width&&yi>=0&&yi<height){const k=(yi*width+xi)*4;for(let c=0;c<4;c++)d[j+c]=s[k+c];}
+      }
+    }else if(type==='pixelate'){
+      const block=Math.max(2,Math.round(amount*.38));
+      for(let y=0;y<height;y+=block)for(let x=0;x<width;x+=block){let n=0,sum=[0,0,0,0];
+        for(let yy=y;yy<Math.min(y+block,height);yy++)for(let xx=x;xx<Math.min(x+block,width);xx++){const i=(yy*width+xx)*4;for(let c=0;c<4;c++)sum[c]+=s[i+c];n++;}
+        for(let yy=y;yy<Math.min(y+block,height);yy++)for(let xx=x;xx<Math.min(x+block,width);xx++){const i=(yy*width+xx)*4;for(let c=0;c<4;c++)d[i+c]=sum[c]/n;}
+      }
+    }else if(type==='halftone'){
+      const spacing=Math.max(4,Math.round(5+amount*.24));
+      // White paper with black dots; retain original transparency.
+      for(let y=0;y<height;y+=spacing)for(let x=0;x<width;x+=spacing){let lum=0,n=0;
+        for(let yy=y;yy<Math.min(height,y+spacing);yy++)for(let xx=x;xx<Math.min(width,x+spacing);xx++){
+          const i=(yy*width+xx)*4;lum+=(s[i]*.2126+s[i+1]*.7152+s[i+2]*.0722)*(s[i+3]/255);n++;}
+        const r=spacing*.5*Math.sqrt(Math.max(0,1-lum/(n*255)));
+        for(let yy=y;yy<Math.min(height,y+spacing);yy++)for(let xx=x;xx<Math.min(width,x+spacing);xx++){
+          const i=(yy*width+xx)*4,dist=Math.hypot(xx-x-spacing/2,yy-y-spacing/2),val=dist<r?20:246;
+          d[i]=d[i+1]=d[i+2]=val;d[i+3]=s[i+3];
+        }
+      }
+    }else if(type==='grain'||type==='paper'){
+      const strength=amount*.6;
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+        const i=(y*width+x)*4,rand=(Math.random()-.5)*2;
+        const texture=type==='paper'?(.45*Math.sin(x*.19+y*.07)+.25*Math.sin(x*.047-y*.081)+rand*.3):rand;
+        for(let c=0;c<3;c++)d[i+c]=clamp8(s[i+c]+texture*strength);
+        d[i+3]=s[i+3];
+      }
+    }
+    if(mask){for(let i=0;i<mask.length;i++){
+      const k=i*4,a=mask[i]/255;if(a===0){d[k]=s[k];d[k+1]=s[k+1];d[k+2]=s[k+2];d[k+3]=s[k+3];}
+      else if(a<1){for(let c=0;c<4;c++)d[k+c]=s[k+c]*(1-a)+d[k+c]*a;}
+    }}
+    ctx.putImageData(out,0,0);scheduleRender();renderLayersUI();commitHistory();notify('Applied '+$('effectType').selectedOptions[0].text+' to the active pixel layer. Undo to adjust.');
+  }
+  // Native PSD import: basic Photoshop 8BPS reader. The decoded images become ordinary
+  // editable raster layers; Photoshop's smart objects and adjustment logic are not emulated.
+  class PSDReader {
+    constructor(ab){this.bytes=new Uint8Array(ab);this.v=new DataView(ab);this.pos=0;}
+    check(n){if(!Number.isSafeInteger(n)||n<0||this.pos+n>this.bytes.length)throw Error('PSD data is truncated or invalid.');}
+    u8(){this.check(1);return this.v.getUint8(this.pos++);}
+    u16(){this.check(2);const n=this.v.getUint16(this.pos,false);this.pos+=2;return n;}
+    i16(){this.check(2);const n=this.v.getInt16(this.pos,false);this.pos+=2;return n;}
+    u32(){this.check(4);const n=this.v.getUint32(this.pos,false);this.pos+=4;return n;}
+    i32(){this.check(4);const n=this.v.getInt32(this.pos,false);this.pos+=4;return n;}
+    four(){this.check(4);const s=String.fromCharCode(...this.bytes.subarray(this.pos,this.pos+4));this.pos+=4;return s;}
+    skip(n){this.check(n);this.pos+=n;}
+    block(n){this.check(n);const arr=this.bytes.subarray(this.pos,this.pos+n);this.pos+=n;return arr;}
+  }
+  function packBitsDecode(src,rows,cols){
+    const out=new Uint8Array(rows*cols);let p=0;
+    for(let y=0;y<rows;y++){
+      const lineSize=src.lengths[y],end=p+lineSize;if(end>src.data.length)throw Error('Bad PSD RLE row data.');let x=0;
+      while(p<end){let n=src.data[p++];if(n>=128)n-=256;
+        if(n>=0){const count=n+1;if(p+count>end||x+count>cols)throw Error('Bad PSD RLE literal.');out.set(src.data.subarray(p,p+count),y*cols+x);p+=count;x+=count;}
+        else if(n!==-128){const count=1-n;if(p>=end||x+count>cols)throw Error('Bad PSD RLE repeat.');out.fill(src.data[p++],y*cols+x,y*cols+x+count);x+=count;}
+      }
+      if(x!==cols)throw Error('PSD RLE row has an unexpected length.');
+    }
+    return out;
+  }
+  async function uncompressPSDPlane(block,w,h){
+    if(w<1||h<1)return new Uint8Array(0);
+    if(w*h>44000000)throw Error('PSD layer dimensions are too large for this browser editor.');
+    const r=new PSDReader(block.buffer.slice(block.byteOffset,block.byteOffset+block.byteLength)),compression=r.u16();
+    if(compression===0){return new Uint8Array(r.block(w*h));}
+    if(compression===1){const lengths=[];for(let i=0;i<h;i++)lengths.push(r.u16());return packBitsDecode({data:r.block(block.length-r.pos),lengths},h,w);}
+    if(compression===2||compression===3){
+      if(!('DecompressionStream' in window))throw Error('ZIP-compressed PSD layers require a newer Chrome/Edge browser.');
+      const response=new Response(new Blob([r.block(block.length-r.pos)]).stream().pipeThrough(new DecompressionStream('deflate')));
+      const bytes=new Uint8Array(await response.arrayBuffer());if(bytes.length<w*h)throw Error('PSD ZIP data is incomplete.');
+      if(compression===3){for(let y=0;y<h;y++){let previous=0;for(let x=0;x<w;x++){const k=y*w+x;previous=(previous+bytes[k])&255;bytes[k]=previous;}}}
+      return bytes.subarray(0,w*h);
+    }
+    throw Error(`Unsupported Photoshop channel compression (${compression}).`);
+  }
+  function psdBlend(code){return ({norm:'source-over',mul :'multiply',scrn:'screen',over:'overlay',dark:'darken',lite:'lighten',div :'color-dodge',idiv:'color-burn',sLit:'soft-light',hLit:'hard-light',diff:'difference',smud:'exclusion',hue :'hue',sat :'saturation',colr:'color',lum :'luminosity'})[code]||'source-over';}
+  function unicodeName(data){if(data.length<4)return '';const v=new DataView(data.buffer,data.byteOffset,data.byteLength),n=Math.min(v.getUint32(0,false),(data.length-4)/2);let result='';for(let i=0;i<n;i++){const code=v.getUint16(4+2*i,false);if(code!==0)result+=String.fromCharCode(code);}return result;}
+  function imageFromChannels(channels,w,h,mode){const ctx=document.createElement('canvas').getContext('2d');ctx.canvas.width=w;ctx.canvas.height=h;const im=ctx.createImageData(w,h),out=im.data;
+    const r=channels.get(0),g=channels.get(1),b=channels.get(2),a=channels.get(-1);
+    for(let i=0;i<w*h;i++){
+      const k=i*4;out[k]=r?r[i]:0;out[k+1]=mode===1?out[k]:(g?g[i]:out[k]);out[k+2]=mode===1?out[k]:(b?b[i]:out[k]);out[k+3]=a?a[i]:255;
+    }ctx.putImageData(im,0,0);return ctx.canvas;
+  }
+  async function parsePSD(buffer){
+    if(buffer.byteLength>160*1024*1024)throw Error('This PSD exceeds the 160 MB import limit.');
+    const r=new PSDReader(buffer);
+    if(r.four()!=='8BPS'||r.u16()!==1)throw Error('Only standard PSD files are supported (not PSB).');
+    r.skip(6);const channels=r.u16(),h=r.u32(),w=r.u32(),depth=r.u16(),mode=r.u16();
+    if(!w||!h||w*h>44000000||w>12000||h>12000)throw Error('PSD image dimensions are too large.');
+    if(depth!==8||![1,3].includes(mode))throw Error('PSD import currently supports 8-bit RGB and grayscale only (not CMYK, 16-bit, or indexed color).');
+    if(channels<1||channels>24)throw Error('PSD has an unsupported channel count.');
+    r.skip(r.u32());r.skip(r.u32()); // color mode data and image resources
+    const layerMaskSection=r.u32(),sectionStart=r.pos,sectionEnd=sectionStart+layerMaskSection;
+    if(sectionEnd>buffer.byteLength)throw Error('PSD layer section is invalid.');
+    const recs=[];
+    if(layerMaskSection>=4){
+      const infoSize=r.u32(),infoEnd=r.pos+infoSize;
+      if(infoEnd>sectionEnd)throw Error('PSD layer information is truncated.');
+      if(infoSize>=2){let count=r.i16();count=Math.abs(count);
+        if(count>2000)throw Error('Too many PSD layer records.');
+        for(let k=0;k<count;k++){
+          const top=r.i32(),left=r.i32(),bottom=r.i32(),right=r.i32(),numChannels=r.u16(),chan=[];
+          if(numChannels>30)throw Error('Too many PSD layer channels.');
+          for(let i=0;i<numChannels;i++)chan.push({id:r.i16(),len:r.u32()});
+          r.four();const blend=r.four(),opacity=r.u8()/255,clipping=r.u8(),flags=r.u8();r.skip(1);
+          const extraSize=r.u32(),extraEnd=r.pos+extraSize;
+          if(extraEnd>infoEnd)throw Error('PSD layer data is malformed.');
+          let maskRect=null,maskDefault=255;
+          const maskSize=r.u32(),maskEnd=r.pos+maskSize;
+          if(maskEnd>extraEnd)throw Error('PSD layer mask is malformed.');
+          if(maskSize>=18){const mt=r.i32(),ml=r.i32(),mb=r.i32(),mr=r.i32();maskDefault=r.u8();r.u8();maskRect={top:mt,left:ml,bottom:mb,right:mr};}
+          r.pos=maskEnd;
+          const ranges=r.u32();r.skip(ranges);
+          const nameStart=r.pos,passLen=r.u8(),passName=r.block(passLen);let name=new TextDecoder('latin1').decode(passName);
+          r.pos=nameStart+Math.ceil((passLen+1)/4)*4;
+          let groupType=0,hasSmart=false,hasText=false;
+          while(r.pos+12<=extraEnd){const signature=r.four(),key=r.four(),len=r.u32();
+            if(signature!=='8BIM'&&signature!=='8B64')break;
+            const start=r.pos;if(start+len>extraEnd)break;
+            if(key==='luni'){const u=unicodeName(r.block(len));if(u)name=u;}
+            else if(key==='lsct'||key==='lsdk'){if(len>=4)groupType=r.u32();}
+            else if(['SoLd','SoLE','PlLd','plLd','lnkD','lnk2','lnk3'].includes(key))hasSmart=true;
+            else if(key==='TySh')hasText=true;
+            r.pos=start+len+(len%2);if(r.pos>extraEnd)r.pos=extraEnd;
+          }
+          r.pos=extraEnd;
+          recs.push({top,left,bottom,right,chan,blend,opacity,clipping,hidden:!!(flags&2),name:name||`Layer ${k+1}`,maskRect,maskDefault,groupType,hasSmart,hasText});
+        }
+        for(const rec of recs){rec.planes=new Map();
+          for(const channel of rec.chan){
+            if(channel.len<2||channel.len>buffer.byteLength-r.pos)throw Error('PSD image channel is corrupted.');
+            const encoded=r.block(channel.len),rc=channel.id===-2?rec.maskRect:null;
+            const cw=rc?Math.max(0,rc.right-rc.left):Math.max(0,rec.right-rec.left);
+            const ch=rc?Math.max(0,rc.bottom-rc.top):Math.max(0,rec.bottom-rec.top);
+            if(cw*ch>0&&[0,1,2,-1,-2].includes(channel.id))rec.planes.set(channel.id,await uncompressPSDPlane(encoded,cw,ch));
+          }
+        }
+      }
+      r.pos=infoEnd;
+    }
+    r.pos=sectionEnd;
+    const rasterCount=Math.max(1,Math.min(MAX_LAYERS,recs.filter(l=>!l.groupType).length));
+    const scale=Math.min(1,MAX_DOC/w,MAX_DOC/h,Math.sqrt(60000000/(w*h*rasterCount)));
+    const dw=Math.max(64,Math.round(w*scale)),dh=Math.max(64,Math.round(h*scale));
+    const assembled=[];let special=0,clipped=0;
+    for(const rec of recs){
+      if(rec.groupType){special++;continue;}
+      const rw=rec.right-rec.left,rh=rec.bottom-rec.top;
+      if(rw<1||rh<1||rw*rh>44000000||!rec.planes.has(0)){
+        if(rec.hasSmart||rec.hasText)special++;continue;
+      }
+      const source=imageFromChannels(rec.planes,rw,rh,mode),bitmap=document.createElement('canvas');bitmap.width=dw;bitmap.height=dh;
+      bitmap.getContext('2d').drawImage(source,Math.round(rec.left*scale),Math.round(rec.top*scale),Math.round(rw*scale),Math.round(rh*scale));
+      let mask=null;
+      if(rec.maskRect&&rec.planes.has(-2)){
+        mask=document.createElement('canvas');mask.width=dw;mask.height=dh;
+        const mc=mask.getContext('2d');if(rec.maskDefault){mc.fillStyle='#ffffff';mc.fillRect(0,0,dw,dh);}
+        const rect=rec.maskRect,mw=rect.right-rect.left,mh=rect.bottom-rect.top;
+        if(mw>0&&mh>0){const img=mc.createImageData(mw,mh),arr=rec.planes.get(-2);
+          for(let i=0;i<arr.length;i++){const j=i*4;img.data[j]=img.data[j+1]=img.data[j+2]=255;img.data[j+3]=arr[i];}
+          const local=document.createElement('canvas');local.width=mw;local.height=mh;local.getContext('2d').putImageData(img,0,0);
+          mc.clearRect(rect.left*scale,rect.top*scale,mw*scale,mh*scale);
+          mc.drawImage(local,rect.left*scale,rect.top*scale,mw*scale,mh*scale);
+        }
+      }
+      assembled.push({name:rec.name.slice(0,80),bitmap,mask,visible:!rec.hidden,opacity:rec.opacity,blend:psdBlend(rec.blend)});
+      if(rec.hasSmart||rec.hasText)special++;
+      if(rec.clipping)clipped++;
+    }
+    if(!assembled.length){
+      // Flattened PSDs have only a composite image section, not editable layers.
+      if(r.pos+2>buffer.byteLength)throw Error('No rasterized layers or composite pixels found in this PSD.');
+      const comp=r.u16(),planes=[];
+      if(comp===0){for(let c=0;c<channels;c++)planes.push(new Uint8Array(r.block(w*h)));}
+      else if(comp===1){const lengths=[];for(let c=0;c<channels;c++)for(let y=0;y<h;y++)lengths.push(r.u16());
+        for(let c=0;c<channels;c++){const l=lengths.slice(c*h,(c+1)*h);const bytes=l.reduce((a,b)=>a+b,0);planes.push(packBitsDecode({data:r.block(bytes),lengths:l},h,w));}
+      }else if(comp===2||comp===3){
+        if(!('DecompressionStream' in window))throw Error('ZIP-compressed PSD requires a newer Chrome/Edge.');
+        const bytes=new Uint8Array(await new Response(new Blob([r.block(buffer.byteLength-r.pos)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+        for(let c=0;c<channels;c++){const plane=new Uint8Array(bytes.subarray(c*w*h,(c+1)*w*h));if(plane.length!==w*h)throw Error('PSD composite is truncated.');
+          if(comp===3)for(let y=0;y<h;y++){let prev=0;for(let x=0;x<w;x++){const i=y*w+x;prev=(prev+plane[i])&255;plane[i]=prev;}}
+          planes.push(plane);
+        }
+      }else throw Error('Unsupported PSD composite compression.');
+      const merged=new Map();for(let c=0;c<(mode===3?3:1);c++)merged.set(c,planes[c]);if(channels>(mode===3?3:1))merged.set(-1,planes[mode===3?3:1]);
+      const source=imageFromChannels(merged,w,h,mode),bitmap=document.createElement('canvas');bitmap.width=dw;bitmap.height=dh;bitmap.getContext('2d').drawImage(source,0,0,dw,dh);
+      assembled.push({name:'PSD composite (flattened)',bitmap,mask:null,visible:true,opacity:1,blend:'source-over'});
+    }
+    // PSD layer records are top-to-bottom; internal stack is bottom-to-top.
+    return {layers:assembled.slice(0,MAX_LAYERS).reverse(),width:dw,height:dh,originalW:w,originalH:h,skipped:Math.max(0,assembled.length-MAX_LAYERS),special,clipped};
+  }
+  async function openPSDFile(file){
+    if(!file)return;
+    if(changed&&!confirm('Opening a PSD will replace this document. Save your editable project first?'))return;
+    if(loadingImages)return;loadingImages=true;notify('Reading PSD layers locally…');
+    try{
+      const parsed=await parsePSD(await file.arrayBuffer());
+      resizeDocument(parsed.width,parsed.height);nextId=1;
+      layers=parsed.layers.map(src=>{const l=makeLayer(src.name);l.bitmap.getContext('2d').drawImage(src.bitmap,0,0);if(src.mask){l.mask=newBitmap();l.mask.getContext('2d').drawImage(src.mask,0,0);}l.visible=src.visible;l.opacity=src.opacity;l.blend=src.blend;return l;});
+      activeId=layers[layers.length-1].id;activeTarget='image';selection=null;renderSelection();
+      docName.value=normName(file.name.replace(/\.psd$/i,''));history=[];historyIndex=-1;
+      renderLayersUI();scheduleRender();commitHistory();changed=false;updateUnsaved();fitCanvas();setTool('move');
+      let extra='';if(parsed.originalW!==parsed.width||parsed.originalH!==parsed.height)extra+=' Resized to fit 4096 px canvas.';
+      if(parsed.skipped)extra+=` ${parsed.skipped} layers omitted due to the 35-layer limit.`;
+      if(parsed.special||parsed.clipped)extra+=' Text, smart objects, groups and clipped layers may not render like Photoshop.';
+      notify(`Imported ${layers.length} editable raster layer(s) from PSD.${extra}`);
+    }catch(e){notify('PSD import failed: '+e.message);console.error(e);}
+    finally{loadingImages=false;}
+  }
+
+  // Event bindings
+  display.addEventListener('pointerdown',startDrag);display.addEventListener('pointermove',continueDrag);display.addEventListener('pointerup',endDrag);display.addEventListener('pointercancel',endDrag);
+  display.addEventListener('contextmenu',e=>e.preventDefault());
+  document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
+  $('deselectTool').addEventListener('click',clearSelection);
+  $('invertSelectBtn').addEventListener('click',invertSelection);
+  $('removeBgBtn').addEventListener('click',removeBackground);
+  $('applyEffectBtn').addEventListener('click',applyEffect);
+  for(const [id,output,suffix] of [['tolerance','toleranceOut',''],['feather','featherOut',' px'],['effectAmount','effectAmountOut','']])$(id).addEventListener('input',()=>$(output).textContent=$(id).value+suffix);
+
+  for(const [id,output,suffix] of [['brushSize','brushSizeOut',''],['brushHardness','hardnessOut','%'],['brushOpacity','brushOpacityOut','%']])$(id).addEventListener('input',()=>{$(output).textContent=$(id).value+suffix;});
+  $('addLayerBtn').addEventListener('click',()=>addLayer());$('duplicateBtn').addEventListener('click',duplicateLayer);
+  $('deleteBtn').addEventListener('click',deleteLayer);$('upBtn').addEventListener('click',()=>reorder(1));$('downBtn').addEventListener('click',()=>reorder(-1));
+  $('addMaskBtn').addEventListener('click',()=>{const l=selectedLayer();if(!l||l.mask)return;const hadSelection=!!selection;createMask(l);if(hadSelection){selection=null;renderSelection();}activeTarget='mask';renderLayersUI();scheduleRender();commitHistory();notify(hadSelection?'Mask created from selection. Paint white or black to refine edges.':'Mask added. Paint black to hide, white to reveal.');});
+  $('blendSelect').addEventListener('change',e=>{const l=selectedLayer();if(!l)return;l.blend=e.target.value;scheduleRender();renderLayersUI();commitHistory();});
+  $('layerOpacity').addEventListener('input',e=>{const l=selectedLayer();if(!l)return;l.opacity=Number(e.target.value)/100;$('layerOpacityOut').textContent=e.target.value+'%';scheduleRender();});
+  $('layerOpacity').addEventListener('change',()=>{commitHistory();renderLayersUI();});
+  $('zoomInBtn').addEventListener('click',()=>changeZoom(zoom*1.25));$('zoomOutBtn').addEventListener('click',()=>changeZoom(zoom/1.25));$('fitBtn').addEventListener('click',fitCanvas);
+  $('newBtn').addEventListener('click',()=>{if(changed&&!confirm('Create a new canvas? Unsaved edits will be lost.'))return;$('newWidth').value=width;$('newHeight').value=height;$('newName').value='Untitled Composition';showModal('newModal');});
+  $('cancelNewBtn').addEventListener('click',()=>closeModal('newModal'));
+  $('confirmNewBtn').addEventListener('click',()=>{const w=Number($('newWidth').value),h=Number($('newHeight').value);if(!Number.isInteger(w)||!Number.isInteger(h)||w<64||h<64||w>MAX_DOC||h>MAX_DOC){notify('Canvas size must be 64–4096 pixels per side.');return;}initialize(w,h,$('newName').value);closeModal('newModal');});
+  $('replaceBtn').addEventListener('click',()=>$('replaceInput').click());
+  $('replaceInput').addEventListener('change',async e=>{await replaceLayerImage(e.target.files[0]);e.target.value='';});
+  $('psdBtn').addEventListener('click',()=>$('psdInput').click());
+  $('psdInput').addEventListener('change',async e=>{await openPSDFile(e.target.files[0]);e.target.value='';});
+  $('importBtn').addEventListener('click',()=>$('imageInput').click());$('imageInput').addEventListener('change',async e=>{await importImages([...e.target.files]);e.target.value='';});
+  $('openBtn').addEventListener('click',()=>{if(changed&&!confirm('Open a saved project? Unsaved edits will be lost.'))return;$('projectInput').click();});
+  $('projectInput').addEventListener('change',async e=>{await openProjectFile(e.target.files[0]);e.target.value='';});
+  $('saveBtn').addEventListener('click',saveProject);$('exportBtn').addEventListener('click',()=>exportImage('png'));$('jpgBtn').addEventListener('click',()=>exportImage('jpeg'));
+  $('demoBtn').addEventListener('click',sample);
+  for(const id of ['helpBtn','moreHelpBtn'])$(id).addEventListener('click',()=>showModal('helpModal'));
+  $('closeHelpBtn').addEventListener('click',()=>closeModal('helpModal'));
+  docName.addEventListener('change',()=>{docName.value=normName(docName.value);commitHistory();updateUnsaved();});
+  for(const id of ['newModal','helpModal'])$(id).addEventListener('pointerdown',e=>{if(e.target===$(id))closeModal(id);});
+  workspace.addEventListener('dragenter',e=>{e.preventDefault();workspace.classList.add('drag-over');});
+  workspace.addEventListener('dragover',e=>e.preventDefault());workspace.addEventListener('dragleave',e=>{if(!workspace.contains(e.relatedTarget))workspace.classList.remove('drag-over');});
+  workspace.addEventListener('drop',e=>{e.preventDefault();workspace.classList.remove('drag-over');const files=[...e.dataTransfer.files];const psd=files.find(f=>/\.psd$/i.test(f.name));if(psd)openPSDFile(psd);else importImages(files);});
+  window.addEventListener('paste',e=>{if(document.activeElement?.matches('input,textarea,[contenteditable]'))return;const files=[...e.clipboardData.items].filter(i=>i.kind==='file'&&i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);if(files.length){e.preventDefault();importImages(files);}});
+  window.addEventListener('keydown',e=>{
+    if(e.code==='Space'&&!['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement?.tagName)){spaceHeld=true;if(e.target===document.body||e.target===display)e.preventDefault();}
+    if(!$('newModal').hidden||!$('helpModal').hidden){if(e.key==='Escape'){closeModal('newModal');closeModal('helpModal');}return;}
+    const cmd=e.ctrlKey||e.metaKey,k=e.key.toLowerCase();
+    if(cmd&&k==='s'){e.preventDefault();saveProject();return;}
+    if(e.target.matches('input,select,textarea')||e.target.isContentEditable)return;
+    if(cmd&&k==='o'){e.preventDefault();$('imageInput').click();return;}
+    if(cmd&&k==='z'){e.preventDefault();undoRedo(e.shiftKey?1:-1);return;}
+    if(cmd&&k==='y'){e.preventDefault();undoRedo(1);return;}
+    if(cmd&&k==='d'){e.preventDefault();clearSelection();return;}
+    if(cmd&&e.shiftKey&&k==='i'){e.preventDefault();invertSelection();return;}
+    if(cmd)return;
+    if(k==='b')setTool('brush');else if(k==='e')setTool('eraser');else if(k==='v')setTool('move');else if(k==='m')setTool('select');else if(k==='l')setTool('lasso');else if(k==='w')setTool('wand');else if(k==='c')setTool('range');
+    else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deleteSelectedPixels();}
+    else if(e.key==='Escape')clearSelection();
+    else if(tool==='move'&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const n=e.shiftKey?10:1;nudgeLayer((e.key==='ArrowLeft'?-n:e.key==='ArrowRight'?n:0),(e.key==='ArrowUp'?-n:e.key==='ArrowDown'?n:0));}
+    else if(k==='['){$('brushSize').value=Math.max(1,Number($('brushSize').value)-5);$('brushSizeOut').textContent=$('brushSize').value;}
+    else if(k===']'){$('brushSize').value=Math.min(200,Number($('brushSize').value)+5);$('brushSizeOut').textContent=$('brushSize').value;}
+  });
+  window.addEventListener('keyup',e=>{if(e.code==='Space')spaceHeld=false;});
+  window.addEventListener('blur',()=>spaceHeld=false);
+  window.addEventListener('beforeunload',e=>{if(changed){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('resize',()=>{if(zoom>1.5)fitCanvas();});
+  initialize();scheduleRender();
+  window.__IDEA_TEST__={getSelection:()=>selection,getState,selectedLayer,renderComposite,initialize,importImages,undoRedo,createMask,changeZoom,saveProject,parsePSD,openPSDFile,selectByColor,removeBackground,applyEffect,makePixelSelection,invertSelection,paintSegment};
+})();
+</script>
+</body>
+</html>
