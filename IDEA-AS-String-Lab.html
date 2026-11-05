@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDEA-AS String Lab v1.3</title>
+<style>
+:root{--g:#3dff70;--gd:#1d8a3c;--gf:rgba(61,255,112,.14);--w:#fff;--o:#D9722F;--bg:#000}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--w);font-family:"Roboto Condensed","Arial Narrow",system-ui,sans-serif;font-size:15px;line-height:1.35}
+body{padding-bottom:40px;overflow-x:hidden}
+.mono,select,input,button,table,.val{font-family:"DM Mono",ui-monospace,Consolas,"Courier New",monospace}
+header{padding:14px 16px 10px;border-bottom:1px solid var(--gd)}
+.eye{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--w);opacity:.8}
+h1{margin:2px 0 4px;font-size:28px;letter-spacing:.07em;text-transform:uppercase;color:var(--g);text-shadow:0 0 10px rgba(61,255,112,.55);font-weight:700}
+h2{margin:0 0 8px;font-size:17px;letter-spacing:.1em;text-transform:uppercase;color:var(--g);font-weight:700}
+h3{margin:0 0 6px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--w)}
+p{margin:4px 0}
+.how{max-width:900px}
+.tabs{display:flex;gap:0;margin-top:10px}
+.tabs button{border:1px solid var(--g);border-right:none;padding:8px 18px;font-size:14px}
+.tabs button:last-child{border-right:1px solid var(--g)}
+.tabs button.on{background:var(--g);color:#000;font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:0 12px}
+section{margin-top:16px}
+.stagebox{border:1px solid var(--gd);padding:6px;background:#000;position:relative}
+.ov{position:absolute;pointer-events:none;background:rgba(0,0,0,.82);border:1px solid var(--gd)}
+canvas{display:block;width:100%}
+#cv,#cvB,#b_inset{touch-action:none;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.status{min-height:20px;color:var(--g);font-size:13px}
+.note{font-size:13px;opacity:.85}
+button,select,input[type=number]{background:#000;color:var(--w);border:1px solid var(--g);padding:6px 9px;font-size:13px;border-radius:0}
+button{cursor:pointer;color:var(--g);text-transform:uppercase;letter-spacing:.06em}
+button:hover,button:focus-visible{background:var(--gf);outline:none}
+button.solid{background:var(--g);color:#000;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--g)}
+.grid5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{border:1px solid var(--gd);padding:10px;min-width:0}
+label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin:6px 0 2px;opacity:.9}
+select,input[type=number]{width:100%}
+.rd{margin-top:8px;font-size:12px;border-top:1px dashed var(--gd);padding-top:6px}
+.rd div{display:flex;justify-content:space-between;gap:8px}
+.rd span:last-child{color:var(--g);text-align:right}
+.warn{color:var(--o)!important}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.kv div{border:1px solid var(--gd);padding:6px 8px;min-width:0}
+.kv b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:400;opacity:.8}
+.kv span{display:block;color:var(--g);font-size:14px;word-break:break-word}
+.tw{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid var(--gd);padding:4px 6px;text-align:right;white-space:nowrap}
+th{color:var(--w);font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+td:first-child,th:first-child{text-align:left}
+td.g{color:var(--g)}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cap{font-size:12px;opacity:.85;margin-top:2px}
+details{border:1px solid var(--gd);padding:8px 10px;margin-top:10px}
+summary{cursor:pointer;color:var(--g);text-transform:uppercase;letter-spacing:.08em}
+ul,ol{margin:6px 0 6px 20px;padding:0}
+li{margin:2px 0}
+[hidden]{display:none!important}
+.insetwrap{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+#b_insetBox{width:230px;border:1px solid var(--gd);padding:4px}
+@media (max-width:1000px){.grid5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.grid3{grid-template-columns:1fr}.charts{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.grid5{grid-template-columns:1fr}h1{font-size:22px}}
+.sfxpad{position:absolute;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;pointer-events:none;z-index:3}
+.sfxpad button{pointer-events:auto;padding:0 3px;font-size:11px;letter-spacing:.04em;opacity:.12;animation:sfxfade 11s ease-in-out infinite;white-space:nowrap;overflow:hidden;text-overflow:clip}
+@keyframes sfxfade{0%,100%{opacity:.12}50%{opacity:1}}
+.sfxpad button:hover,.sfxpad button:focus-visible{animation:none;opacity:1;background:var(--gf)}
+.sfxpad.static{position:static;margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.sfxpad.static button{padding:6px 4px;font-size:12px}
+@media (prefers-reduced-motion:reduce){.sfxpad button{animation:none;opacity:.9}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eye">iDEA Autonomous Systems · Physics: Waves and Sound</div>
+  <h1>String Lab</h1>
+  <p class="how">Pluck strings, change the spacing, and read the numbers. Every sound is shown as a live wave and a live FFT (a graph of the frequencies in the sound). Use headphones or speakers at a low volume first.</p>
+  <div class="tabs"><button id="tabG" class="on">Guitar strings</button><button id="tabB">Banjo</button></div>
+</header>
+<main>
+
+<!-- ============ GUITAR PAGE ============ -->
+<div id="pgG">
+<section>
+  <div class="stagebox"><canvas id="cv" aria-label="Three guitar strings. Drag the handles to change spacing. Click and pull a string to pluck it."></canvas></div>
+  <p class="note">Drag the round handles on the left to change the spacing between the strings. Click a string, pull it up or down, then let go to pluck it.</p>
+  <div class="row">
+    <button id="pb0">Pluck string 1</button><button id="pb1">Pluck string 2</button><button id="pb2">Pluck string 3</button>
+    <button id="btnReplay" class="solid">Play last pluck again</button>
+    <span class="status" id="status">Click a string, pull it, then let go.</span>
+  </div>
+  <p class="note" id="scaleNote"></p>
+</section>
+
+<section>
+  <h2>Settings</h2>
+  <div class="grid3" id="strCards"></div>
+  <div class="grid2" style="margin-top:10px">
+    <div class="card">
+      <h3>String spacing</h3>
+      <label for="gap01">Space between string 1 and string 2 (mm)</label>
+      <input type="number" id="gap01" min="4" max="24" step="0.5">
+      <label for="gap12">Space between string 2 and string 3 (mm)</label>
+      <input type="number" id="gap12" min="4" max="24" step="0.5">
+      <div class="row"><button id="btnSpace">Reset spacing to 10 mm</button></div>
+      <label for="pre">Tuning presets</label>
+      <select id="pre">
+        <option value="">Choose a preset…</option>
+        <option value="std">Standard: E2, A2, D3</option>
+        <option value="same">All three strings the same note: E2</option>
+        <option value="oct">Octaves: E2, E3, E4</option>
+        <option value="fifth">Perfect fifth: E2, B2, E3</option>
+      </select>
+    </div>
+    <div class="card">
+      <h3>Pluck, pickup and display</h3>
+      <label for="pL">Scale length: nut to bridge (mm) <span class="val" id="vL"></span></label>
+      <input type="range" id="pL" min="500" max="700" step="1">
+      <label for="pH">Pluck height when you just click (mm) <span class="val" id="vH"></span></label>
+      <input type="range" id="pH" min="0.5" max="6" step="0.1">
+      <label for="pQ">Pickup position, fraction of length from the nut <span class="val" id="vQ"></span></label>
+      <input type="range" id="pQ" min="0.05" max="0.95" step="0.01">
+      <label for="pS">Sustain: how long the string keeps ringing <span class="val" id="vS"></span></label>
+      <input type="range" id="pS" min="0.5" max="2" step="0.05">
+      <label for="pSlow">Motion on screen is slowed by</label>
+      <select id="pSlow"><option value="50">50 times</option><option value="100" selected>100 times</option><option value="200">200 times</option><option value="500">500 times</option></select>
+      <label for="pBig">Make the motion look bigger <span class="val" id="vBig"></span></label>
+      <input type="range" id="pBig" min="1" max="10" step="0.5">
+      <label for="pVol">Volume <span class="val" id="vVol"></span></label>
+      <input type="range" id="pVol" min="0" max="1" step="0.01">
+    </div>
+  </div>
+</section>
+
+<section id="report">
+  <h2>Data report for the last pluck</h2>
+  <p class="note" id="repNote"></p>
+  <div class="kv" id="sumGrid"></div>
+  <h3 style="margin-top:14px">The three strings</h3>
+  <div class="tw"><table id="tblStr"></table></div>
+  <h3 style="margin-top:14px">Harmonics of the plucked string</h3>
+  <div class="tw"><table id="tblHarm"></table></div>
+  <p class="cap">Level at pickup is the loudness of each harmonic in the sound, compared with the loudest one. A harmonic is missing when the string is plucked at a point where that harmonic has a node (no motion).</p>
+  <h3 style="margin-top:14px">Nearby strings that start to ring</h3>
+  <div class="tw"><table id="tblSym"></table></div>
+  <p class="cap">A string rings by itself when a harmonic of the plucked string has almost the same frequency as one of its own harmonics. This is resonance. The spacing rule used for the size of the effect is a classroom model (see About).</p>
+  <h3 style="margin-top:14px">Model graphs</h3>
+  <div class="charts">
+    <div><canvas id="chSpec"></canvas><div class="cap">Model spectrum: level of each harmonic. Green lines: plucked string. White dots: nearby strings ringing.</div></div>
+    <div><canvas id="chWave"></canvas><div class="cap">Model sound wave at the pickup, first 40 ms.</div></div>
+    <div><canvas id="chLev"></canvas><div class="cap">Level over time (dB). Green: fundamental of the plucked string. White: the strongest ringing harmonic on a nearby string.</div></div>
+    <div><canvas id="chCoup"></canvas><div class="cap">Model coupling between strings (dB) against the spacing. Dashed lines mark your current spacings.</div></div>
+  </div>
+  <div class="row"><button id="btnCSV">Save data (CSV)</button></div>
+  <div id="scopeG"></div>
+</section>
+</div>
+
+<!-- ============ BANJO PAGE ============ -->
+<div id="pgB" hidden>
+<section>
+  <div class="stagebox"><canvas id="cvB" aria-label="A five-string banjo seen from above. Click a string and pull it to pluck. Tap the round drum head to make a drum sound."></canvas></div>
+  <p class="note">Click a string, pull it up or down, then let go to pluck it. Tap anywhere on the round head to hit the drum. The live wave and FFT beside the neck show every sound as it plays. The sound buttons in the top corner slowly fade in and out; they play sounds made by this page (not recordings) and the FFT shows them too. Strings that match a head frequency will ring. On a phone use the buttons below.</p>
+  <div class="row" id="b_btns"></div>
+  <div class="row"><span class="status" id="b_status">Pluck a string or tap the head.</span></div>
+  <p class="note" id="b_scaleNote"></p>
+</section>
+
+<section>
+  <h2>Settings</h2>
+  <div class="grid5" id="b_cards"></div>
+  <div class="grid2" style="margin-top:10px">
+    <div class="card">
+      <h3>String spacing at the bridge</h3>
+      <div class="insetwrap">
+        <div id="b_insetBox"><canvas id="b_inset" aria-label="End view of the five strings. Drag the circles up or down to change the spacing."></canvas></div>
+        <div style="flex:1;min-width:140px">
+          <label for="b_gap0">5th to 4th (mm)</label><input type="number" id="b_gap0" min="4" max="24" step="0.5">
+          <label for="b_gap1">4th to 3rd (mm)</label><input type="number" id="b_gap1" min="4" max="24" step="0.5">
+          <label for="b_gap2">3rd to 2nd (mm)</label><input type="number" id="b_gap2" min="4" max="24" step="0.5">
+          <label for="b_gap3">2nd to 1st (mm)</label><input type="number" id="b_gap3" min="4" max="24" step="0.5">
+          <div class="row"><button id="b_btnSpace">Reset spacing to 7.5 mm</button></div>
+        </div>
+      </div>
+      <label for="b_pre">Tuning presets</label>
+      <select id="b_pre"><option value="">Choose a preset…</option><option value="openG">Open G: g, D, G, B, D</option><option value="dblC">Double C: g, C, G, C, D</option><option value="gmod">G modal: g, D, G, C, D</option></select>
+    </div>
+    <div class="card">
+      <h3>Head, pluck and display</h3>
+      <label for="b_headF">Head pitch f₀₁ (lowest drum frequency) <span class="val" id="b_vHeadF"></span></label>
+      <input type="range" id="b_headF" min="200" max="700" step="1">
+      <label for="b_tapS">Tap strength <span class="val" id="b_vTapS"></span></label>
+      <input type="range" id="b_tapS" min="0.2" max="2" step="0.05">
+      <label for="b_L">Scale length: nut to bridge (mm) <span class="val" id="b_vL"></span></label>
+      <input type="range" id="b_L" min="600" max="700" step="1">
+      <label for="b_pH">Pluck height when you just click (mm) <span class="val" id="b_vH"></span></label>
+      <input type="range" id="b_pH" min="0.5" max="6" step="0.1">
+      <label for="b_pS">Sustain: how long the strings keep ringing <span class="val" id="b_vS"></span></label>
+      <input type="range" id="b_pS" min="0.5" max="2" step="0.05">
+      <label for="b_pSlow">Motion on screen is slowed by</label>
+      <select id="b_pSlow"><option value="50">50 times</option><option value="100" selected>100 times</option><option value="200">200 times</option><option value="500">500 times</option></select>
+      <label for="b_pBig">Make the motion look bigger <span class="val" id="b_vBig"></span></label>
+      <input type="range" id="b_pBig" min="1" max="12" step="0.5">
+      <label for="b_pVol">Volume <span class="val" id="b_vVol"></span></label>
+      <input type="range" id="b_pVol" min="0" max="1" step="0.01">
+    </div>
+  </div>
+</section>
+
+<section id="b_report">
+  <h2>Data report for the last sound</h2>
+  <p class="note" id="b_repNote"></p>
+  <div class="kv" id="b_sumGrid"></div>
+  <h3 style="margin-top:14px">The five strings</h3>
+  <div class="tw"><table id="b_tblStr"></table></div>
+  <h3 style="margin-top:14px">The drum head: its frequencies</h3>
+  <div class="kv" id="b_headKV"></div>
+  <div class="tw" style="margin-top:8px"><table id="b_tblHead"></table></div>
+  <p class="cap">A round drum head vibrates in patterns. Mode (m, n) has m lines across the head and n rings. Frequencies are the lowest frequency times a ratio from the zeros of Bessel functions. Tap weight shows how strongly your last tap started each pattern. Taps at the centre only start the ring patterns (m = 0).</p>
+  <h3 style="margin-top:14px">Harmonics of the plucked string</h3>
+  <div class="tw"><table id="b_tblHarm"></table></div>
+  <p class="cap">Head boost is how much the drum head raises each harmonic. Level in sound is the loudness in the sound, compared with the loudest harmonic.</p>
+  <h3 style="margin-top:14px">Other strings that start to ring</h3>
+  <div class="tw"><table id="b_tblSym"></table></div>
+  <p class="cap">After a pluck, a string rings when one of its harmonics matches a harmonic of the plucked string. After a tap, a string rings when one of its harmonics is close to a head frequency. Sizes come from classroom model rules (see About).</p>
+  <h3 style="margin-top:14px">Model graphs</h3>
+  <div class="charts">
+    <div><canvas id="b_chSpec"></canvas><div class="cap">Model spectrum of the last sound. Green lines: plucked string or head patterns. White dots: other strings ringing.</div></div>
+    <div><canvas id="b_chHead"></canvas><div class="cap">How much the head boosts each frequency (dB). Dashed lines: head frequencies.</div></div>
+    <div><canvas id="b_chLev"></canvas><div class="cap">Level over time (dB). Green: main sound. White: strongest ringing harmonic on another string.</div></div>
+    <div><canvas id="b_chCoup"></canvas><div class="cap">Model coupling between strings (dB) against spacing. Dashed lines mark your current spacings.</div></div>
+  </div>
+  <div id="scopeB"></div>
+</section>
+</div>
+
+<section>
+  <details open>
+    <summary>Try this</summary>
+    <ol>
+      <li>Guitar: pluck string 2 near the bridge (right side), then near the middle. Compare the FFT graphs. Which harmonics change?</li>
+      <li>Guitar: click string 1 at one quarter of the length from the nut. Which harmonic is missing in the table and in the FFT? Why?</li>
+      <li>Banjo: tap the head at the centre, then near the rim. Which head frequencies appear in the FFT each time? Why do they change?</li>
+      <li>Banjo: pluck the 4th string, then slide the head pitch slider up and down. Watch the head response graph. When does the sound get loudest?</li>
+      <li>Banjo: tap the head and look at which strings ring. Change the tuning preset and tap again.</li>
+    </ol>
+  </details>
+  <details>
+    <summary>About: equations, model rules and limits</summary>
+    <ul>
+      <li>Wave speed on a string: v = √(T ÷ μ). T is tension in newtons. μ is mass per metre. Longest wave on the string: λ = 2L. Fundamental f₁ = v ÷ λ = (1 ÷ 2L) √(T ÷ μ). You choose the note, and the page works out the tension.</li>
+      <li>Harmonics: fₙ = n × f₁ (a little higher for a stiff string). A string plucked at a point 1/n of its length from an end has no harmonic n.</li>
+      <li>Pluck shape: a triangle with height h at position p. Size of harmonic n: bₙ = 2h ÷ (n² π² p (1 − p)) × sin(n π p). Energy in the pulled string: E = T h² ÷ (2 L p (1 − p)). The page also adds up the energy of the harmonics as a check.</li>
+      <li>Guitar sound follows the speed of the string at the pickup position. Banjo sound follows the speed of the string at the bridge, where the strings push on the head.</li>
+      <li>Stiffness: B = π³ E d⁴ ÷ (64 T L²), with E = 200 GPa for steel. Wound strings use a core diameter of 0.4 × string diameter (estimate). Fading rate of harmonic n: (0.8 + 0.015 n²) per second, divided by the sustain setting. Teaching values, not measured.</li>
+      <li><b>Spacing model (classroom rule):</b> coupling between two strings = 0.2 ÷ (1 + (d ÷ 12 mm)²). A ringing harmonic has size = coupling × resonance factor × size of the driving harmonic. The resonance factor depends on how close the two frequencies are (quality factor 300). On a real instrument the strings share a bridge, so the real effect of spacing is smaller than this rule shows.</li>
+      <li><b>Banjo head model:</b> a round, thin, evenly stretched membrane of radius 139.7 mm (11 inch). Its frequencies are f(m,n) = f₀₁ × j(m,n) ÷ 2.4048, where j(m,n) are zeros of Bessel functions. Tension per length: Tₘ = σ (2π R f₀₁ ÷ 2.4048)², with σ = 0.26 kg/m² for a plastic head (estimate). A tap at distance r and angle θ from the centre starts pattern (m, n) with size ∝ Jₘ(j r ÷ R) cos(mθ) ÷ Jₘ₊₁(j)², multiplied by 1 ÷ (1 + (f ÷ 400 Hz)²) because a finger touches the head for a short time (estimate). Each pattern fades with rate π f ÷ 15 per second (quality factor 15, estimate).</li>
+      <li>Head boost on strings: boost(f) = 1 + 1.6 × Σ c(m,n) ÷ √(1 + ((f − f(m,n)) ÷ bandwidth)²), where c(m,n) = |Jₘ(j r_b ÷ R)| is how well the bridge (12 mm from the centre) couples to the pattern. Bandwidth = f(m,n) ÷ 30. A string harmonic near a head frequency is louder. This is a classroom model, not a measurement.</li>
+      <li>Strings ringing after a tap: size = 0.02 × head pattern size × a closeness factor that depends on the gap between the string harmonic and the head frequency.</li>
+      <li>Banjo strings: 5th string starts at the fifth fret and is about 74.9 % of the scale length; the other four run nut to bridge. Gauges follow a common 10-13-20w-29w-10 set (w = wound).</li>
+      <li>Limits: strings move up and down only; strings are drawn parallel (real banjo strings fan out slightly); no fretting; no resonator or body; drum head modes use an ideal membrane (no air loading); the pictures are stretched up and down by the stated factors; fading values do not match any one real instrument.</li>
+      <li>FFT: a Fourier transform of 65536 samples (strings) or 8192 samples (taps) with a Hann window. "Live" graphs use the browser's own analyser while the sound plays.</li>
+      <li>Sources: Fletcher and Rossing, <i>The Physics of Musical Instruments</i> (2nd ed., Springer, 1998); Fletcher, H. (1964) Normal vibration frequencies of a stiff piano string, <i>J. Acoust. Soc. Am.</i> 36; Bessel function zeros from standard tables; equal temperament with A4 = 440 Hz; steel density 7850 kg/m³.</li>
+    </ul>
+  </details>
+</section>
+</main>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const FS=44100,NMAX=48,GAM0=0.8,GAM2=0.015,K0=0.2,D0=12,TAU_R=0.3,QF=300,MING=4,HMAX=6,KP=120;
+const R_H=139.7,RB=12,SIGMA=0.26,Q_H=15,KH=0.02,GH=1.6,HEAD_A0=800,TAP_FC=400;
+const NN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTES=[];for(let m=40;m<=72;m++)NOTES.push({m,name:NN[m%12]+(Math.floor(m/12)-1),f:440*Math.pow(2,(m-69)/12)});
+const GAUGES=[['.009',0],['.010',0],['.011',0],['.013',0],['.015',0],['.017',0],['.020',1],['.024',1],['.026',1],['.029',1],['.030',1],['.036',1],['.042',1],['.046',1],['.052',1],['.056',1]]
+ .map(([id,w])=>({id,w:!!w,label:id+(w?' wound':' plain'),d:parseFloat(id)*25.4,rho:w?5500:7850}));
+const GPRE={std:[[40,'.046 wound'],[45,'.036 wound'],[50,'.026 wound']],same:[[40,'.046 wound'],[40,'.046 wound'],[40,'.046 wound']],
+ oct:[[40,'.046 wound'],[52,'.026 wound'],[64,'.010 plain']],fifth:[[40,'.046 wound'],[47,'.030 wound'],[52,'.026 wound']]};
+const BPRE={openG:[[67,'.010 plain'],[50,'.029 wound'],[55,'.020 wound'],[59,'.013 plain'],[62,'.010 plain']],
+ dblC:[[67,'.010 plain'],[48,'.029 wound'],[55,'.020 wound'],[60,'.013 plain'],[62,'.010 plain']],
+ gmod:[[67,'.010 plain'],[50,'.029 wound'],[55,'.020 wound'],[60,'.013 plain'],[62,'.010 plain']]};
+
+/* ---------- the two instruments ---------- */
+const G={id:'g',pre:'',kind:'guitar',n:3,L:648,y:[8,18,28],str:[{m:40,gauge:'.046 wound'},{m:45,gauge:'.036 wound'},{m:50,gauge:'.026 wound'}],
+ h:3,q:0.85,sust:1,slow:100,big:1,dur:7,last:{i:1,p:0.8,h:3,played:false},names:i=>'String '+(i+1),ev:null,buf:null,bufKind:'pluck',labels:[],cap:null};
+const B={id:'b',pre:'b_',kind:'banjo',n:5,L:660,y:[-15,-7.5,0,7.5,15],str:[{m:67,gauge:'.010 plain'},{m:50,gauge:'.029 wound'},{m:55,gauge:'.020 wound'},{m:59,gauge:'.013 plain'},{m:62,gauge:'.010 plain'}],
+ h:3,q:0,sust:1,slow:100,big:4,dur:5,headF:420,tapS:1,last:{i:2,p:0.85,h:3,played:false,type:'pluck'},tap:{r:60,th:0,s:1,played:false},
+ names:i=>['5th string','4th string','3rd string','2nd string','1st string'][i],ev:null,buf:null,bufKind:'pluck',labels:[],cap:null};
+let VOL=0.6,NORM=1,ac=null,master=null,an=null,src=null;
+const YMAXG=45,YMING=3,YB=22;
+
+/* ---------- Bessel functions and head modes ---------- */
+function besselJ(m,x){const N=240;let s=0;for(let k=0;k<N;k++){const t=(k+0.5)*Math.PI/N;s+=Math.cos(m*t-x*Math.sin(t));}return s/N;}
+const HJ=[[0,1,2.4048],[1,1,3.8317],[2,1,5.1356],[0,2,5.5201],[3,1,6.3802],[1,2,7.0156],[4,1,7.5883],[2,2,8.4172],[0,3,8.6537],[5,1,8.7715],[3,2,9.7610],[1,3,10.1735],[6,1,9.9361],[4,2,11.0647],[2,3,11.6198],[0,4,11.7915]].sort((a,b)=>a[2]-b[2]);
+const HEAD=HJ.map(([m,n,j])=>({m,n,j,ratio:j/2.4048,Jn1:besselJ(m+1,j)**2,c:Math.abs(besselJ(m,j*RB/R_H))}));
+function headTm(){const R=R_H/1000;return SIGMA*Math.pow(2*Math.PI*R*B.headF/2.4048,2);}
+function headGain(f){let s=1;for(const h of HEAD){const fm=B.headF*h.ratio,bw=fm/(2*Q_H);s+=GH*h.c/Math.sqrt(1+((f-fm)/bw)**2);}return s;}
+function gainAt(lab,f){return lab.kind==='banjo'?headGain(f):1;}
+function pwf(lab,n){return lab.kind==='guitar'?Math.sin(n*Math.PI*lab.q):1;}
+const SINT=[];for(let n=0;n<=NMAX;n++){SINT[n]=new Float32Array(KP+1);for(let k=0;k<=KP;k++)SINT[n][k]=Math.sin(n*Math.PI*k/KP);}
+
+/* ---------- string physics (shared) ---------- */
+function props(lab,i){const s=lab.str[i],nt=NOTES.find(n=>n.m===s.m),g=GAUGES.find(x=>x.label===s.gauge);
+ const Lmm=(lab.kind==='banjo'&&i===0)?lab.L*Math.pow(2,-5/12):lab.L,Lm=Lmm/1000,f0=nt.f,mu=g.rho*(Math.PI*g.d*g.d/4)*1e-6,v=2*Lm*f0,T=mu*v*v;
+ const dc=(g.w?0.4*g.d:g.d)*1e-3,Bf=Math.PI**3*2e11*dc**4/(64*T*Lm*Lm);
+ return{i,nt,g,Lm,Lmm,f0,mu,v,T,B:Bf,lam:2*Lm,name:lab.names(i)};}
+function fn(P,n){return n*P.f0*Math.sqrt(1+P.B*n*n);}
+function modesFor(lab,i,p,h){const P=props(lab,i),a=[];
+ for(let n=1;n<=NMAX;n++){const f=fn(P,n);if(f>20000)break;
+  const b=2*h/(n*n*Math.PI*Math.PI*p*(1-p))*Math.sin(n*Math.PI*p),gam=(GAM0+GAM2*n*n)/lab.sust;
+  a.push({n,f,b,gam,t60:Math.log(1000)/gam,E:P.T*Math.PI**2*n*n*(b*1e-3)**2/(4*P.Lm),pw:pwf(lab,n),g:gainAt(lab,f)});}
+ return a;}
+function sympFor(lab,i,modes){const out=[];
+ for(let j=0;j<lab.n;j++){if(j===i)continue;const Pj=props(lab,j),d=Math.abs(lab.y[i]-lab.y[j]),k=K0/(1+(d/D0)**2),list=[];
+  for(let m=1;m<=24;m++){const fm=fn(Pj,m);if(fm>12000)break;const bw=fm/(2*QF);let best=null,bv=-1;
+   for(const md of modes){const R=1/Math.sqrt(1+((md.f-fm)/bw)**2),val=R*Math.abs(md.b);if(val>bv){bv=val;best=md;}}
+   const R=1/Math.sqrt(1+((best.f-fm)/bw)**2),a=k*R*Math.abs(best.b),pw=pwf(lab,m),g=gainAt(lab,fm);
+   list.push({j,m,f:fm,n:best.n,cents:1200*Math.log2(best.f/fm),R,k,a,A:a*2*Math.PI*fm*pw*g,gam:(GAM0+GAM2*m*m)/lab.sust,pw,g,d});}
+  out.push({j,d,k,list});}
+ return out;}
+function envPeak(m,dur){let best=0,bt=0;for(let t=0;t<=dur;t+=0.01){const v=m.a*Math.exp(-m.gam*t)*(1-Math.exp(-t/TAU_R));if(v>best){best=v;bt=t;}}return{v:best,t:bt};}
+function srcPluck(lab,i,p,h,symp=true){const modes=modesFor(lab,i,p,h),sy=symp?sympFor(lab,i,modes):[],list=[];
+ modes.forEach(md=>list.push({f:md.f,A:md.b*2*Math.PI*md.f*md.pw*md.g,gam:md.gam,rise:false}));
+ sy.forEach(g=>g.list.forEach(m=>list.push({f:m.f,A:m.A,gam:m.gam,rise:true})));
+ return{modes,sy,list};}
+/* head tap */
+function tapModes(r,th,s){return HEAD.map(h=>{const f=B.headF*h.ratio,w=besselJ(h.m,h.j*r/R_H)*Math.cos(h.m*th)/h.Jn1,A=s*HEAD_A0*w/(1+(f/TAP_FC)**2),gam=Math.PI*f/Q_H;
+ return{m:h.m,n:h.n,f,w,A,gam,t60:Math.log(1000)/gam,c:h.c,ratio:h.ratio};});}
+function tapSymp(modes){const out=[];
+ for(let j=0;j<B.n;j++){const Pj=props(B,j),list=[];
+  for(let m=1;m<=24;m++){const fm=fn(Pj,m);if(fm>8000)break;let best=null,bv=-1;
+   for(const hm of modes){const bw=hm.f/(2*Q_H),R=1/Math.sqrt(1+((hm.f-fm)/bw)**2),val=R*Math.abs(hm.A);if(val>bv){bv=val;best={hm,R};}}
+   const A=KH*bv;
+   list.push({j,m,f:fm,hm:best.hm,R:best.R,cents:1200*Math.log2(best.hm.f/fm),A,a:A/(2*Math.PI*fm),gam:(GAM0+GAM2*m*m)/B.sust,pw:1,g:1,d:0,k:KH});}
+  out.push({j,d:0,k:KH,list});}
+ return out;}
+function srcTap(r,th,s){const modes=tapModes(r,th,s),sy=tapSymp(modes),list=[];
+ modes.forEach(h=>list.push({f:h.f,A:h.A,gam:h.gam,rise:false}));
+ sy.forEach(g=>g.list.forEach(m=>list.push({f:m.f,A:m.A,gam:m.gam,rise:true})));
+ return{hmodes:modes,sy,list};}
+function renderList(list,N){const out=new Float64Array(N),dt=1/FS,er=Math.exp(-dt/TAU_R);
+ for(const s of list){const A=s.A;if(!A||Math.abs(A)<1e-12)continue;const dec=Math.exp(-s.gam*dt),w=2*Math.PI*s.f*dt,cr=dec*Math.cos(w),ci=dec*Math.sin(w);let zr=1,zi=0,e=1;
+  if(s.rise){for(let k=0;k<N;k++){out[k]+=A*zi*(1-e);e*=er;const t=zr*cr-zi*ci;zi=zr*ci+zi*cr;zr=t;}}
+  else{for(let k=0;k<N;k++){out[k]+=A*zi;const t=zr*cr-zi*ci;zi=zr*ci+zi*cr;zr=t;}}}
+ return out;}
+function toBuf(raw){const o=new Float32Array(raw.length);for(let k=0;k<raw.length;k++)o[k]=Math.tanh(raw[k]*NORM);return o;}
+function renderPluck(lab,i,p,h,N,symp=true){return toBuf(renderList(srcPluck(lab,i,p,h,symp).list,N));}
+function calcNorm(){const r=renderList(srcPluck(G,1,0.8,3,false).list,FS);let pk=0;for(let k=0;k<r.length;k++)pk=Math.max(pk,Math.abs(r[k]));NORM=0.3/pk;}
+function nearestNote(f){const m=69+12*Math.log2(f/440),r=Math.round(m);return{name:NN[((r%12)+12)%12]+(Math.floor(r/12)-1),cents:(m-r)*100};}
+function tensionFlag(T){return T>120?'too high: string would likely break':(T<25?'too low: string is slack':'in normal range');}
+
+/* ---------- audio ---------- */
+function audio(){if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;ac=new C();master=ac.createGain();master.gain.value=VOL;
+  const comp=ac.createDynamicsCompressor();master.connect(comp);comp.connect(ac.destination);an=ac.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0.5;master.connect(an);}
+ if(ac.state==='suspended')ac.resume();return true;}
+function play(buf){if(!audio())return;if(src){try{src.stop();}catch(e){}}
+ const ab=ac.createBuffer(1,buf.length,FS);ab.copyToChannel(buf,0);src=ac.createBufferSource();src.buffer=ab;src.connect(master);src.start();}
+function setVol(v){VOL=v;if(master)master.gain.value=VOL;$('pVol').value=v;$('b_pVol').value=v;$('vVol').textContent=Math.round(v*100)+' %';$('b_vVol').textContent=Math.round(v*100)+' %';}
+
+/* ---------- events (pluck / tap) ---------- */
+function labelsPluck(lab,i,sp){const L=[];sp.modes.forEach(m=>L.push({f:m.f,t:lab.names(i)+' harmonic '+m.n}));sp.sy.forEach(g=>g.list.forEach(m=>L.push({f:m.f,t:lab.names(g.j)+' harmonic '+m.m+' (ringing)'})));return L;}
+function pluck(lab,i,p,h){lab.last={i,p,h,played:true,type:'pluck'};const sp=srcPluck(lab,i,p,h,true);const buf=toBuf(renderList(sp.list,FS*lab.dur));
+ lab.buf=buf;lab.bufKind='pluck';lab.labels=labelsPluck(lab,i,sp);lab.ev={kind:'pluck',t0:performance.now(),i,p,h,modes:sp.modes,symp:sp.sy};play(buf);capture(lab);report(lab);}
+function tapHead(r,th){const s=B.tapS;B.tap={r,th,s,played:true};B.last.type='tap';B.last.played=true;
+ const sp=srcTap(r,th,s),buf=toBuf(renderList(sp.list,FS*B.dur));B.buf=buf;B.bufKind='tap';
+ B.labels=[];sp.hmodes.forEach(h=>B.labels.push({f:h.f,t:'Head mode ('+h.m+','+h.n+')'}));sp.sy.forEach(g=>g.list.forEach(m=>B.labels.push({f:m.f,t:B.names(g.j)+' harmonic '+m.m+' (ringing)'})));
+ B.ev={kind:'tap',t0:performance.now(),r,th,hmodes:sp.hmodes,symp:sp.sy};play(buf);capture(B);report(B);}
+function shapeOf(lab,j,el){const out=new Float32Array(KP+1),ev=lab.ev;if(!ev)return out;const tv=el/lab.slow;
+ if(ev.kind==='pluck'&&ev.i===j){const ms=Math.min(30,ev.modes.length);for(let q=0;q<ms;q++){const m=ev.modes[q],A=m.b*Math.exp(-m.gam*el)*Math.cos(2*Math.PI*m.f*tv);if(Math.abs(A)<1e-5)continue;const T=SINT[m.n];for(let k=0;k<=KP;k++)out[k]+=A*T[k];}}
+ else{const grp=ev.symp.find(s=>s.j===j);if(grp){const rise=1-Math.exp(-el/TAU_R);for(const m of grp.list){const A=m.a*rise*Math.exp(-m.gam*el)*Math.cos(2*Math.PI*m.f*tv);if(Math.abs(A)<1e-5)continue;const T=SINT[m.m];for(let k=0;k<=KP;k++)out[k]+=A*T[k];}}}
+ return out;}
+function lineGlow(cx,w){cx.lineWidth=w;cx.shadowColor='rgba(61,255,112,.9)';cx.shadowBlur=8;}
+const MONO='11px "DM Mono",ui-monospace,Consolas,monospace';
+
+/* ================= GUITAR SCREEN ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let gdrag=null,ghover=null;
+function ggeo(){const W=cv.clientWidth,ML=W<520?104:116,MR=W<520?20:34,sy=W<520?6:7,TOP=22,nutX=ML,brX=W-MR,sx=(brX-nutX)/G.L;
+ return{W,H:TOP+(YMAXG+3)*sy+34,ML,MR,sy,TOP,nutX,brX,sx,hx:16,dimX:W<520?40:46,y:G.y.map(v=>TOP+v*sy)};}
+function fitMain(){const g=ggeo(),d=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(g.W*d);cv.height=Math.round(g.H*d);cv.style.height=g.H+'px';cx.setTransform(d,0,0,d,0,0);}
+function drawG(now){const g=ggeo(),ev=G.ev,el=ev?(now-ev.t0)/1000:0;if(g.W<80)return;
+ cx.clearRect(0,0,g.W,g.H);cx.fillStyle='#000';cx.fillRect(0,0,g.W,g.H);cx.font=MONO;cx.textBaseline='middle';
+ cx.shadowBlur=0;cx.strokeStyle='#fff';cx.lineWidth=2;
+ const yTop=g.TOP-2,yBot=g.TOP+(YMAXG+2)*g.sy;
+ cx.strokeRect(g.nutX-8,yTop,8,yBot-yTop);cx.strokeRect(g.brX,yTop,8,yBot-yTop);
+ cx.fillStyle='#fff';cx.textAlign='center';cx.fillText('nut',g.nutX-4,yBot+12);cx.textAlign='right';cx.fillText('bridge',g.brX+8,yBot+12);cx.textAlign='center';
+ cx.strokeStyle='#fff';cx.lineWidth=1;cx.beginPath();cx.moveTo(g.nutX,yBot+24);cx.lineTo(g.brX,yBot+24);cx.moveTo(g.nutX,yBot+19);cx.lineTo(g.nutX,yBot+29);cx.moveTo(g.brX,yBot+19);cx.lineTo(g.brX,yBot+29);cx.stroke();
+ cx.fillText('L = '+G.L+' mm',(g.nutX+g.brX)/2,yBot+16);
+ const qx=g.nutX+G.q*(g.brX-g.nutX);cx.setLineDash([3,4]);cx.beginPath();cx.moveTo(qx,yTop);cx.lineTo(qx,yBot);cx.stroke();cx.setLineDash([]);cx.fillText('pickup',qx,yTop-8);
+ for(let i=0;i<3;i++){const P=props(G,i),y=g.y[i];
+  cx.shadowBlur=0;cx.strokeStyle=(ghover&&ghover.type==='handle'&&ghover.i===i)||(gdrag&&gdrag.type==='move'&&gdrag.i===i)?'#fff':'#3dff70';cx.lineWidth=2;
+  cx.beginPath();cx.arc(g.hx,y,9,0,7);cx.stroke();cx.beginPath();cx.moveTo(g.hx-4,y-3);cx.lineTo(g.hx,y-6);cx.lineTo(g.hx+4,y-3);cx.moveTo(g.hx-4,y+3);cx.lineTo(g.hx,y+6);cx.lineTo(g.hx+4,y+3);cx.stroke();
+  cx.fillStyle='#fff';cx.textAlign='center';cx.fillText('S'+(i+1),g.hx,y-17);
+  const sh=shapeOf(G,i,el),pre=(gdrag&&gdrag.type==='pluck'&&gdrag.i===i)?gdrag:null;
+  cx.beginPath();
+  for(let k=0;k<=KP;k++){const x=g.nutX+k/KP*(g.brX-g.nutX);let yy=y+sh[k]*g.sy*G.big;
+   if(pre){const pp=pre.p,t=k/KP;yy=y+pre.pull*(t<=pp?t/pp:(1-t)/(1-pp));}
+   if(k===0)cx.moveTo(x,yy);else cx.lineTo(x,yy);}
+  cx.strokeStyle='#3dff70';lineGlow(cx,1+P.g.d*2.2);cx.stroke();cx.shadowBlur=0;
+  cx.strokeStyle='rgba(61,255,112,.3)';cx.lineWidth=1;cx.setLineDash([2,5]);cx.beginPath();cx.moveTo(g.nutX,y);cx.lineTo(g.brX,y);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle='#fff';cx.textAlign='left';cx.fillText(P.nt.name+'  '+P.nt.f.toFixed(2)+' Hz',g.brX-(g.W<520?112:150),y-14);}
+ cx.strokeStyle='#fff';cx.fillStyle='#fff';cx.lineWidth=1;cx.textAlign='left';
+ for(let i=0;i<2;i++){const a=g.y[i],b=g.y[i+1],x=g.dimX;cx.beginPath();cx.moveTo(x,a);cx.lineTo(x,b);cx.moveTo(x-4,a);cx.lineTo(x+4,a);cx.moveTo(x-4,b);cx.lineTo(x+4,b);cx.stroke();cx.fillText((G.y[i+1]-G.y[i]).toFixed(1)+' mm',x+7,(a+b)/2);}
+ if(gdrag&&gdrag.type==='pluck'){cx.fillStyle='#3dff70';cx.textAlign='left';cx.fillText('pull '+Math.abs(gdrag.pull/(g.sy*G.big)).toFixed(1)+' mm at '+(gdrag.p*G.L).toFixed(0)+' mm from nut',Math.min(g.W-210,gdrag.x0+10),g.y[gdrag.i]+gdrag.pull+(gdrag.pull>=0?16:-16));}
+ if(ev){const stt='String '+(ev.i+1)+' ('+props(G,ev.i).nt.name+') plucked '+el.toFixed(1)+' s ago';if(el<G.dur&&$('status').dataset.k!==stt){$('status').textContent=stt;$('status').dataset.k=stt;}}}
+function gptr(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function ghit(pt){const g=ggeo();for(let i=0;i<3;i++)if(Math.hypot(pt.x-g.hx,pt.y-g.y[i])<18)return{type:'handle',i};
+ let best=null,bd=13;for(let i=0;i<3;i++){if(pt.x>=g.nutX&&pt.x<=g.brX){const d=Math.abs(pt.y-g.y[i]);if(d<bd){bd=d;best={type:'string',i};}}}return best;}
+cv.addEventListener('pointerdown',e=>{const pt=gptr(e),h=ghit(pt),g=ggeo();if(!h)return;e.preventDefault();cv.setPointerCapture(e.pointerId);
+ if(h.type==='handle')gdrag={type:'move',i:h.i};
+ else gdrag={type:'pluck',i:h.i,x0:pt.x,y0:pt.y,pull:0,moved:false,p:Math.min(.97,Math.max(.03,(pt.x-g.nutX)/(g.brX-g.nutX)))};});
+cv.addEventListener('pointermove',e=>{const pt=gptr(e),g=ggeo();
+ if(!gdrag){ghover=ghit(pt);cv.style.cursor=ghover?(ghover.type==='handle'?'ns-resize':'grab'):'default';return;}
+ if(gdrag.type==='move'){const i=gdrag.i,lo=i===0?YMING:G.y[i-1]+MING,hi=i===2?YMAXG:G.y[i+1]-MING;G.y[i]=Math.min(hi,Math.max(lo,(pt.y-g.TOP)/g.sy));syncGapsG();report(G);}
+ else{const dy=pt.y-g.y[gdrag.i],lim=HMAX*g.sy*G.big;gdrag.pull=Math.max(-lim,Math.min(lim,dy));if(Math.hypot(pt.x-gdrag.x0,pt.y-gdrag.y0)>4)gdrag.moved=true;}});
+cv.addEventListener('pointerup',()=>{if(!gdrag)return;const g=ggeo(),d=gdrag;gdrag=null;
+ if(d.type==='pluck'){let h=G.h;if(d.moved&&Math.abs(d.pull)/(g.sy*G.big)>=0.2)h=d.pull/(g.sy*G.big);pluck(G,d.i,d.p,h);}});
+cv.addEventListener('pointercancel',()=>{gdrag=null;});
+cv.addEventListener('pointerleave',()=>{if(!gdrag)ghover=null;});
+
+/* ================= BANJO SCREEN ================= */
+const ovW=document.createElement('canvas'),ovF=document.createElement('canvas');ovW.className='ov';ovF.className='ov';ovW.id='b_ovW';ovF.id='b_ovF';$('cvB').parentNode.appendChild(ovW);$('cvB').parentNode.appendChild(ovF);
+const cvB=$('cvB'),bx=cvB.getContext('2d'),cvI=$('b_inset'),ix=cvI.getContext('2d');let bdrag=null,bhover=null,idrag=null;
+function bgeo(){const W=cvB.clientWidth,pad=12,span=130+B.L+R_H+12-RB+10,sc=(W-2*pad)/span,x0=pad+130*sc,H=Math.max(190,Math.round(2*(R_H+22)*sc+(W>=860?84:50))),cy=H/2;
+ return{W,H,sc,x0,cy,cxh:x0+(B.L-RB)*sc,R:R_H*sc,xb:x0+B.L*sc,x5:x0+B.L*(1-Math.pow(2,-5/12))*sc,X:wx=>x0+wx*sc,Y:wy=>cy+wy*sc};}
+function fitBanjo(){const g=bgeo(),d=Math.min(2,window.devicePixelRatio||1);cvB.width=Math.round(g.W*d);cvB.height=Math.round(g.H*d);cvB.style.height=g.H+'px';bx.setTransform(d,0,0,d,0,0);
+ const IW=222,IH=Math.round(2*YB*5.2+34);cvI.width=Math.round(IW*d);cvI.height=Math.round(IH*d);cvI.style.width=IW+'px';cvI.style.height=IH+'px';ix.setTransform(d,0,0,d,0,0);}
+function drawB(now){const g=bgeo(),ev=B.ev,el=ev?(now-ev.t0)/1000:0,X=g.X,Y=g.Y,sc=g.sc;if(g.W<80)return;
+ bx.clearRect(0,0,g.W,g.H);bx.fillStyle='#000';bx.fillRect(0,0,g.W,g.H);bx.font=MONO;bx.textBaseline='middle';bx.shadowBlur=0;
+ const hw=(R_H+12)*sc; // rim
+ /* head: flash and ripple */
+ const flash=(ev&&ev.kind==='tap')?Math.exp(-ev.hmodes[0].gam*el):0;
+ bx.strokeStyle='#fff';bx.lineWidth=2;bx.beginPath();bx.arc(g.cxh,g.cy,hw,0,7);bx.stroke();
+ bx.lineWidth=1;bx.strokeStyle='rgba(255,255,255,.55)';for(let k=0;k<36;k++){const a=k/36*2*Math.PI;bx.beginPath();bx.moveTo(g.cxh+Math.cos(a)*(R_H+2)*sc,g.cy+Math.sin(a)*(R_H+2)*sc);bx.lineTo(g.cxh+Math.cos(a)*(R_H+12)*sc,g.cy+Math.sin(a)*(R_H+12)*sc);bx.stroke();}
+ bx.strokeStyle='#3dff70';bx.lineWidth=2;bx.shadowColor='rgba(61,255,112,.9)';bx.shadowBlur=6+18*flash;bx.beginPath();bx.arc(g.cxh,g.cy,g.R,0,7);bx.stroke();bx.shadowBlur=0;
+ bx.strokeStyle='rgba(61,255,112,.28)';bx.lineWidth=1;for(let k=1;k<=3;k++){bx.beginPath();bx.arc(g.cxh,g.cy,g.R*k/4,0,7);bx.stroke();}
+ if(ev&&ev.kind==='tap'){const tx=g.cxh+ev.r*Math.cos(ev.th)*sc,ty=g.cy+ev.r*Math.sin(ev.th)*sc,rr=Math.min(el*600,320)*sc,al=Math.max(0,1-el/0.5);
+  bx.strokeStyle='rgba(255,255,255,'+al.toFixed(3)+')';bx.lineWidth=1.5;bx.beginPath();bx.arc(tx,ty,Math.max(2,rr),0,7);bx.stroke();bx.fillStyle='#fff';bx.beginPath();bx.arc(tx,ty,3,0,7);bx.fill();}
+ /* neck */
+ const nl=X(0),nr=X(B.L-RB-R_H);bx.strokeStyle='#fff';bx.lineWidth=2;
+ bx.beginPath();bx.moveTo(nl,Y(-17));bx.lineTo(g.cxh-g.R+2,Y(-20));bx.moveTo(nl,Y(17));bx.lineTo(g.cxh-g.R+2,Y(20));bx.stroke();
+ bx.beginPath();bx.moveTo(nl,Y(-17));bx.lineTo(nl,Y(17));bx.stroke(); // nut
+ bx.lineWidth=1;bx.strokeStyle='rgba(255,255,255,.6)';
+ for(let k=1;k<=19;k++){const xw=B.L*(1-Math.pow(2,-k/12));if(X(xw)>g.cxh-g.R-4)break;const hwid=17+3*xw/(B.L-RB-R_H);bx.beginPath();bx.moveTo(X(xw),Y(-hwid));bx.lineTo(X(xw),Y(hwid));bx.stroke();}
+ bx.fillStyle='#fff';for(const k of [5,7,10,12,15,17]){const xw=B.L*(1-Math.pow(2,-(k-0.5)/12));if(X(xw)>g.cxh-g.R-4)continue;bx.beginPath();bx.arc(X(xw),Y(0),2,0,7);bx.fill();}
+ /* peghead */
+ bx.strokeStyle='#fff';bx.lineWidth=2;bx.beginPath();bx.moveTo(nl,Y(-17));bx.lineTo(X(-110),Y(-26));bx.lineTo(X(-125),Y(-26));bx.lineTo(X(-125),Y(26));bx.lineTo(X(-110),Y(26));bx.lineTo(nl,Y(17));bx.stroke();
+ bx.lineWidth=1.5;for(let k=0;k<4;k++){bx.beginPath();bx.arc(X(-95+k*0),Y(-14+k*9.3),4*Math.max(.8,sc/1.2),0,7);bx.stroke();}
+ bx.beginPath();bx.arc(g.x5,Y(-23),3.5*Math.max(.8,sc/1.2),0,7);bx.stroke();bx.fillStyle='#fff';bx.textAlign='left';bx.fillText('5th peg',g.x5-14,Y(-23)-11);
+ /* bridge, tailpiece */
+ bx.strokeStyle='#fff';bx.lineWidth=3;bx.beginPath();bx.moveTo(g.xb,Y(Math.min(...B.y)-5));bx.lineTo(g.xb,Y(Math.max(...B.y)+5));bx.stroke();
+ const tx0=X(B.L+86);bx.lineWidth=2;bx.strokeRect(tx0,Y(-14),X(B.L+102)-tx0,Y(14)-Y(-14));
+ bx.fillStyle='#fff';bx.textAlign='center';bx.fillText('bridge',g.xb,Y(-34));bx.fillText('tailpiece',(tx0+X(B.L+102))/2,Y(-34));bx.fillText('head',g.cxh,g.cy+g.R+16);bx.fillText('nut',nl,Y(-34)+0);
+ /* strings */
+ for(let i=0;i<B.n;i++){const P=props(B,i),y=Y(B.y[i]),xs=i===0?g.x5:nl,sh=shapeOf(B,i,el),pre=(bdrag&&bdrag.type==='pluck'&&bdrag.i===i)?bdrag:null;
+  bx.strokeStyle='rgba(61,255,112,.35)';bx.lineWidth=1;bx.beginPath();bx.moveTo(g.xb,y);bx.lineTo(X(B.L+94),y);bx.stroke();
+  bx.beginPath();
+  for(let k=0;k<=KP;k++){const x=xs+k/KP*(g.xb-xs);let yy=y+sh[k]*sc*B.big;if(pre){const pp=pre.p,t=k/KP;yy=y+pre.pull*(t<=pp?t/pp:(1-t)/(1-pp));}
+   if(k===0)bx.moveTo(x,yy);else bx.lineTo(x,yy);}
+  bx.strokeStyle='#3dff70';lineGlow(bx,Math.max(1,(0.5+P.g.d*1.2)*Math.min(1.3,sc)));bx.stroke();bx.shadowBlur=0;}
+ /* string labels left of nut */
+ bx.fillStyle='#fff';bx.textAlign='right';if(g.W>520)for(let i=0;i<B.n;i++){bx.fillText(['5','4','3','2','1'][i],nl-4,Y(B.y[i]));}
+ if(bdrag&&bdrag.type==='pluck'){bx.fillStyle='#3dff70';bx.textAlign='left';bx.fillText('pull '+Math.abs(bdrag.pull/(sc*B.big)).toFixed(1)+' mm at '+(bdrag.p*props(B,bdrag.i).Lmm).toFixed(0)+' mm from the string start',Math.min(g.W-260,bdrag.x0+10),g.Y(B.y[bdrag.i])+bdrag.pull+(bdrag.pull>=0?16:-16));}
+ if(ev){const s=ev.kind==='pluck'?B.names(ev.i)+' ('+props(B,ev.i).nt.name+') plucked '+el.toFixed(1)+' s ago':'Head tapped '+el.toFixed(1)+' s ago at '+ev.r.toFixed(0)+' mm from the centre';
+  if(el<B.dur&&$('b_status').dataset.k!==s){$('b_status').textContent=s;$('b_status').dataset.k=s;}}
+ drawInset();}
+function igeo(){return{W:cvI.clientWidth,H:cvI.clientHeight,top:16,sy:5.2,cx:cvI.clientWidth/2+10};}
+function drawInset(){const g=igeo();ix.clearRect(0,0,g.W,g.H);ix.fillStyle='#000';ix.fillRect(0,0,g.W,g.H);ix.font=MONO;ix.textBaseline='middle';
+ const Y=v=>g.top+(v+YB)*g.sy;
+ ix.strokeStyle='rgba(61,255,112,.25)';ix.lineWidth=1;ix.setLineDash([2,4]);ix.beginPath();ix.moveTo(g.cx-60,Y(0));ix.lineTo(g.cx+60,Y(0));ix.stroke();ix.setLineDash([]);
+ for(let i=0;i<B.n;i++){const y=Y(B.y[i]),act=idrag&&idrag.i===i;ix.strokeStyle=act?'#fff':'#3dff70';ix.lineWidth=2;ix.beginPath();ix.arc(g.cx,y,8,0,7);ix.stroke();
+  ix.fillStyle='#3dff70';ix.beginPath();ix.arc(g.cx,y,2.5,0,7);ix.fill();ix.fillStyle='#fff';ix.textAlign='left';const P=props(B,i);ix.fillText(['5th','4th','3rd','2nd','1st'][i]+' '+P.nt.name,g.cx+16,y);}
+ ix.strokeStyle='#fff';ix.fillStyle='#fff';ix.lineWidth=1;ix.textAlign='right';
+ for(let i=0;i<B.n-1;i++){const a=Y(B.y[i]),b=Y(B.y[i+1]),x=g.cx-22;ix.beginPath();ix.moveTo(x,a);ix.lineTo(x,b);ix.moveTo(x-4,a);ix.lineTo(x+4,a);ix.moveTo(x-4,b);ix.lineTo(x+4,b);ix.stroke();ix.fillText((B.y[i+1]-B.y[i]).toFixed(1),x-6,(a+b)/2);}
+ ix.textAlign='left';ix.fillText('end view, mm',4,8);}
+function iptr(e){const r=cvI.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cvI.addEventListener('pointerdown',e=>{const pt=iptr(e),g=igeo();for(let i=0;i<B.n;i++){if(Math.hypot(pt.x-g.cx,pt.y-(g.top+(B.y[i]+YB)*g.sy))<16){idrag={i};cvI.setPointerCapture(e.pointerId);e.preventDefault();return;}}});
+cvI.addEventListener('pointermove',e=>{if(!idrag)return;const pt=iptr(e),g=igeo(),i=idrag.i,lo=i===0?-YB:B.y[i-1]+MING,hi=i===B.n-1?YB:B.y[i+1]-MING;B.y[i]=Math.min(hi,Math.max(lo,(pt.y-g.top)/g.sy-YB));syncGapsB();report(B);});
+cvI.addEventListener('pointerup',()=>{idrag=null;});cvI.addEventListener('pointercancel',()=>{idrag=null;});
+function bptr(e){const r=cvB.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function bhit(pt){const g=bgeo();let best=null,bd=6;for(let i=0;i<B.n;i++){const xs=i===0?g.x5:g.x0;if(pt.x>=xs&&pt.x<=g.xb){const d=Math.abs(pt.y-g.Y(B.y[i]));if(d<bd){bd=d;best={type:'string',i};}}}
+ if(best)return best;const dx=pt.x-g.cxh,dy=pt.y-g.cy;if(Math.hypot(dx,dy)<=g.R)return{type:'head'};return null;}
+cvB.addEventListener('pointerdown',e=>{const pt=bptr(e),h=bhit(pt),g=bgeo();if(!h)return;e.preventDefault();
+ if(h.type==='head'){const dx=(pt.x-g.cxh)/g.sc,dy=(pt.y-g.cy)/g.sc;tapHead(Math.min(R_H,Math.hypot(dx,dy)),Math.atan2(dy,dx));return;}
+ cvB.setPointerCapture(e.pointerId);const xs=h.i===0?g.x5:g.x0;
+ bdrag={type:'pluck',i:h.i,x0:pt.x,y0:pt.y,pull:0,moved:false,p:Math.min(.97,Math.max(.03,(pt.x-xs)/(g.xb-xs)))};});
+cvB.addEventListener('pointermove',e=>{const pt=bptr(e),g=bgeo();
+ if(!bdrag){bhover=bhit(pt);cvB.style.cursor=bhover?(bhover.type==='string'?'grab':'pointer'):'default';return;}
+ const dy=pt.y-g.Y(B.y[bdrag.i]),lim=HMAX*g.sc*B.big;bdrag.pull=Math.max(-lim,Math.min(lim,dy));if(Math.hypot(pt.x-bdrag.x0,pt.y-bdrag.y0)>4)bdrag.moved=true;});
+cvB.addEventListener('pointerup',()=>{if(!bdrag)return;const g=bgeo(),d=bdrag;bdrag=null;let h=B.h;if(d.moved&&Math.abs(d.pull)/(g.sc*B.big)>=0.2)h=d.pull/(g.sc*B.big);pluck(B,d.i,d.p,h);});
+cvB.addEventListener('pointercancel',()=>{bdrag=null;});
+
+/* ---------- controls ---------- */
+function buildCards(lab,boxId,pfx,ids){const box=$(boxId);box.innerHTML='';
+ for(let i=0;i<lab.n;i++){const c=document.createElement('div');c.className='card';
+  c.innerHTML='<h3>'+(lab.kind==='guitar'?'String '+(i+1):lab.names(i))+'</h3><label for="'+pfx+'n'+i+'">Note</label><select id="'+pfx+'n'+i+'">'+NOTES.map(n=>'<option value="'+n.m+'">'+n.name+' ('+n.f.toFixed(1)+' Hz)</option>').join('')+'</select>'+
+   '<label for="'+pfx+'g'+i+'">String size (inches)</label><select id="'+pfx+'g'+i+'">'+GAUGES.map(g=>'<option>'+g.label+'</option>').join('')+'</select><div class="rd" id="'+pfx+'rd'+i+'"></div>';
+  box.appendChild(c);$(pfx+'n'+i).value=lab.str[i].m;$(pfx+'g'+i).value=lab.str[i].gauge;
+  $(pfx+'n'+i).onchange=e=>{lab.str[i].m=+e.target.value;refresh(lab);};$(pfx+'g'+i).onchange=e=>{lab.str[i].gauge=e.target.value;refresh(lab);};}}
+function readouts(lab){const pf=lab.pre;for(let i=0;i<lab.n;i++){const P=props(lab,i),flag=tensionFlag(P.T),bad=flag.indexOf('normal')<0;
+ $(pf+'rd'+i).innerHTML='<div><span>Frequency f₁</span><span>'+P.f0.toFixed(2)+' Hz</span></div><div><span>String length</span><span>'+P.Lmm.toFixed(0)+' mm</span></div><div><span>Mass per metre μ</span><span>'+(P.mu*1000).toFixed(2)+' g/m</span></div>'+
+  '<div><span>Tension T</span><span class="'+(bad?'warn':'')+'">'+P.T.toFixed(1)+' N</span></div><div><span>Wave speed v</span><span>'+P.v.toFixed(1)+' m/s</span></div>'+
+  '<div><span>Tension check</span><span class="'+(bad?'warn':'')+'">'+flag+'</span></div>';}}
+function refresh(lab){readouts(lab);report(lab);}
+function syncGapsG(){$('gap01').value=(G.y[1]-G.y[0]).toFixed(1);$('gap12').value=(G.y[2]-G.y[1]).toFixed(1);}
+function setGapG(which,val){val=Math.min(24,Math.max(MING,+val||10));let g1=G.y[1]-G.y[0],g2=G.y[2]-G.y[1];if(which===0)g1=val;else g2=val;
+ if(G.y[0]+g1+g2>YMAXG){if(which===0)g1=YMAXG-G.y[0]-g2;else g2=YMAXG-G.y[0]-g1;}g1=Math.max(MING,g1);g2=Math.max(MING,g2);G.y[1]=G.y[0]+g1;G.y[2]=G.y[1]+g2;syncGapsG();report(G);}
+function syncGapsB(){for(let i=0;i<4;i++)$('b_gap'+i).value=(B.y[i+1]-B.y[i]).toFixed(1);}
+function setGapB(which,val){val=Math.min(24,Math.max(MING,+val||7.5));const gaps=[0,1,2,3].map(i=>B.y[i+1]-B.y[i]);gaps[which]=val;let tot=gaps.reduce((a,b)=>a+b,0);
+ if(tot>2*YB){gaps[which]-=tot-2*YB;tot=2*YB;}const y0=Math.max(-YB,Math.min(B.y[0],YB-tot));B.y[0]=y0;for(let i=0;i<4;i++)B.y[i+1]=B.y[i]+gaps[i];syncGapsB();report(B);}
+$('gap01').onchange=e=>setGapG(0,e.target.value);$('gap12').onchange=e=>setGapG(1,e.target.value);
+$('btnSpace').onclick=()=>{G.y=[8,18,28];syncGapsG();report(G);};
+for(let i=0;i<4;i++)$('b_gap'+i).onchange=e=>setGapB(i,e.target.value);
+$('b_btnSpace').onclick=()=>{B.y=[-15,-7.5,0,7.5,15];syncGapsB();report(B);};
+function applyPreset(lab,P,pfx,key){const p=P[key];if(!p)return;p.forEach((v,i)=>{lab.str[i].m=v[0];lab.str[i].gauge=v[1];$(pfx+'n'+i).value=v[0];$(pfx+'g'+i).value=v[1];});refresh(lab);}
+$('pre').onchange=e=>applyPreset(G,GPRE,'',e.target.value);$('b_pre').onchange=e=>applyPreset(B,BPRE,'b_',e.target.value);
+function bindR(id,obj,key,out,fmt,cb){const el=$(id);el.value=obj[key];const sh=()=>{if(out)$(out).textContent=fmt(obj[key]);};sh();el.oninput=()=>{obj[key]=+el.value;sh();if(cb)cb();};}
+bindR('pL',G,'L','vL',v=>v+' mm',()=>{fitMain();refresh(G);});bindR('pH',G,'h','vH',v=>(+v).toFixed(1)+' mm');
+bindR('pQ',G,'q','vQ',v=>(+v).toFixed(2),()=>report(G));bindR('pS',G,'sust','vS',v=>'×'+(+v).toFixed(2),()=>report(G));bindR('pBig',G,'big','vBig',v=>'×'+(+v).toFixed(1));
+bindR('b_L',B,'L','b_vL',v=>v+' mm',()=>{fitBanjo();refresh(B);});bindR('b_pH',B,'h','b_vH',v=>(+v).toFixed(1)+' mm');
+bindR('b_headF',B,'headF','b_vHeadF',v=>v+' Hz',()=>report(B));bindR('b_tapS',B,'tapS','b_vTapS',v=>'×'+(+v).toFixed(2));
+bindR('b_pS',B,'sust','b_vS',v=>'×'+(+v).toFixed(2),()=>report(B));bindR('b_pBig',B,'big','b_vBig',v=>'×'+(+v).toFixed(1));
+$('pVol').value=VOL;$('b_pVol').value=VOL;$('vVol').textContent=Math.round(VOL*100)+' %';$('b_vVol').textContent=Math.round(VOL*100)+' %';
+$('pVol').oninput=e=>setVol(+e.target.value);$('b_pVol').oninput=e=>setVol(+e.target.value);
+$('pSlow').onchange=e=>{G.slow=+e.target.value;};$('b_pSlow').onchange=e=>{B.slow=+e.target.value;};
+for(let i=0;i<3;i++)$('pb'+i).onclick=()=>pluck(G,i,0.8,G.h);
+$('btnReplay').onclick=()=>pluck(G,G.last.i,G.last.p,G.last.h);
+(function(){const box=$('b_btns');
+ for(let i=0;i<5;i++){const b=document.createElement('button');b.id='b_pb'+i;b.textContent='Pluck '+['5th','4th','3rd','2nd','1st'][i];b.onclick=()=>pluck(B,i,0.85,B.h);box.appendChild(b);}
+ const t1=document.createElement('button');t1.id='b_tap0';t1.className='solid';t1.textContent='Tap head: centre';t1.onclick=()=>tapHead(0,0);box.appendChild(t1);
+ const t2=document.createElement('button');t2.id='b_tap1';t2.className='solid';t2.textContent='Tap head: near rim';t2.onclick=()=>tapHead(R_H*0.85,Math.PI*0.75);box.appendChild(t2);
+ const rp=document.createElement('button');rp.id='b_replay';rp.textContent='Play last sound again';rp.onclick=()=>{if(B.last.type==='sfx')playSfx(B.sfxKey);else if(B.last.type==='tap'&&B.tap.played)tapHead(B.tap.r,B.tap.th);else pluck(B,B.last.i,B.last.p,B.last.h);};box.appendChild(rp);})();
+
+/* ---------- helpers for graphs ---------- */
+function fit(c,h){const d=Math.min(2,window.devicePixelRatio||1),w=c.clientWidth||300;c.width=Math.round(w*d);c.height=Math.round(h*d);c.style.height=h+'px';const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);return{x,w,h};}
+function frame(o,xr,yr,xt,yt,xl,yl,fx,fy){const{x,w,h}=o,m={l:48,r:12,t:12,b:36};const X=v=>m.l+(v-xr[0])/(xr[1]-xr[0])*(w-m.l-m.r),Y=v=>h-m.b-(v-yr[0])/(yr[1]-yr[0])*(h-m.t-m.b);
+ x.font='10px "DM Mono",ui-monospace,Consolas,monospace';x.fillStyle='#fff';x.strokeStyle='rgba(61,255,112,.25)';x.lineWidth=1;x.textBaseline='middle';
+ x.textAlign='center';for(const t of xt){x.beginPath();x.moveTo(X(t),m.t);x.lineTo(X(t),h-m.b);x.stroke();x.fillText(fx?fx(t):t,X(t),h-m.b+10);}
+ x.textAlign='right';for(const t of yt){x.beginPath();x.moveTo(m.l,Y(t));x.lineTo(w-m.r,Y(t));x.stroke();x.fillText(fy?fy(t):t,m.l-4,Y(t));}
+ x.strokeStyle='#fff';x.beginPath();x.moveTo(m.l,m.t);x.lineTo(m.l,h-m.b);x.lineTo(w-m.r,h-m.b);x.stroke();
+ x.textAlign='center';x.fillText(xl,(m.l+w-m.r)/2,h-8);x.save();x.translate(11,(m.t+h-m.b)/2);x.rotate(-Math.PI/2);x.fillText(yl,0,0);x.restore();
+ return{X,Y,m};}
+const f1=(v,d=1)=>(+v).toFixed(d);
+function dB(a,ref){return 20*Math.log10(Math.max(a,1e-12)/Math.max(ref,1e-12));}
+const GR='#3dff70';
+
+/* ---------- report (both screens) ---------- */
+function analyse(lab){const{i,p,h}=lab.last,P=props(lab,i),sp=srcPluck(lab,i,p,h,true),modes=sp.modes,sy=sp.sy;
+ const items=modes.map(m=>({f:m.f,A:Math.abs(m.b)*2*Math.PI*m.f*Math.abs(m.pw)*m.g,type:'p',n:m.n}));
+ sy.forEach(g=>g.list.forEach(m=>{const pk=envPeak(m,lab.dur);m.pkv=pk.v;m.pkt=pk.t;m.pA=pk.v*2*Math.PI*m.f*Math.abs(m.pw)*m.g;items.push({f:m.f,A:m.pA,type:'s',j:g.j,m:m.m});}));
+ const maxA=Math.max(...items.map(t=>t.A),1e-12),E_closed=0.5*P.T*(h*1e-3)**2/(P.Lm*p*(1-p)),E_sum=modes.reduce((a,m)=>a+m.E,0);
+ return{i,p,h,P,modes,sy,items,maxA,E_closed,E_sum};}
+const E=(lab,n)=>$(lab.pre+n);
+function report(lab){
+ const AN=analyse(lab);lab.AN=AN;const{i,p,h,P,modes,sy,items,maxA,E_closed,E_sum}=AN,bj=lab.kind==='banjo';
+ const showPluck=!bj||lab.last.type==='pluck'||true;
+ E(lab,'repNote').textContent=lab.last.played?'Showing the numbers for your last '+(bj&&lab.last.type==='tap'?'tap (head numbers) and last pluck (string numbers). They update when you change settings.':'pluck. They update when you change settings.'):'You have not made a sound yet. The numbers are for a default pluck. Pluck a string'+(bj?' or tap the head':'')+' to replace them.';
+ const nn=nearestNote(P.f0),m1=modes[0],strong=items.filter(t=>t.type==='p').sort((a,b)=>b.A-a.A)[0];
+ const missing=[];for(let n=1;n<=12;n++)if(Math.abs(Math.sin(n*Math.PI*p))<0.12)missing.push(n);
+ const kv=[['Plucked string',P.name+' · '+P.nt.name],['Frequency f₁',f1(P.f0,2)+' Hz ('+nn.name+', '+(nn.cents>=0?'+':'')+f1(nn.cents,1)+' cents)'],
+  ['String length L',f1(P.Lmm,0)+' mm'],['Wave speed v = √(T ÷ μ)',f1(P.v,1)+' m/s'],['Wavelength λ₁ = 2L',f1(P.lam,3)+' m'],['Check: v ÷ λ₁',f1(P.v/P.lam,2)+' Hz'],
+  ['Tension T',f1(P.T,1)+' N · '+tensionFlag(P.T)],['Mass per metre μ',f1(P.mu*1000,2)+' g/m ('+P.g.label+')'],
+  ['Pluck position',f1(p*P.Lmm,0)+' mm from string start ('+f1(p,2)+' L), '+f1((1-p)*P.Lmm,0)+' mm from bridge'],['Pluck height',f1(Math.abs(h),1)+' mm'],
+  ['Energy stored in pulled string',f1(E_closed*1000,2)+' mJ'],['Sum of harmonic energies (check)',f1(E_sum*1000,2)+' mJ ('+f1(100*E_sum/E_closed,1)+' % of the line above)'],
+  ['Fundamental fades 60 dB in',f1(m1.t60,1)+' s'],['Loudest harmonic in sound','n = '+strong.n+' ('+f1(strong.f,1)+' Hz)'],
+  ['Harmonics with almost no motion',missing.length?missing.map(n=>'n = '+n).join(', '):'none up to n = 12'],['Stiffness factor B',(P.B*1e5).toFixed(2)+' × 10⁻⁵']];
+ E(lab,'sumGrid').innerHTML=kv.map(r=>'<div><b>'+r[0]+'</b><span>'+r[1]+'</span></div>').join('');
+ const ps=[];for(let k=0;k<lab.n;k++)ps.push(props(lab,k));
+ let t='<tr><th></th>'+ps.map(q=>'<th>'+q.name+'</th>').join('')+'</tr>';const row=(l,fn_)=>'<tr><td>'+l+'</td>'+ps.map(q=>'<td class="g">'+fn_(q)+'</td>').join('')+'</tr>';
+ t+=row('Note',q=>q.nt.name)+row('f₁ (Hz)',q=>f1(q.f0,2))+row('String size',q=>q.g.label)+row('Length (mm)',q=>f1(q.Lmm,0))+row('μ (g/m)',q=>f1(q.mu*1000,2))+row('T (N)',q=>f1(q.T,1))+row('v (m/s)',q=>f1(q.v,1))+row('λ₁ = 2L (m)',q=>f1(q.lam,3))+
+  '<tr><td>Position across neck (mm)</td>'+lab.y.map(v=>'<td class="g">'+f1(v,1)+'</td>').join('')+'</tr>';
+ E(lab,'tblStr').innerHTML=t;
+ const ref=Math.max(...modes.map(m=>Math.abs(m.b)*2*Math.PI*m.f*Math.abs(m.pw)*m.g),1e-12);
+ let th='<tr><th>n</th><th>Frequency (Hz)</th><th>Motion size (mm)</th>'+(bj?'<th>Head boost (dB)</th>':'')+'<th>Level in sound (dB)</th><th>Fades 60 dB in (s)</th></tr>';
+ modes.slice(0,12).forEach(m=>{const A=Math.abs(m.b)*2*Math.PI*m.f*Math.abs(m.pw)*m.g;th+='<tr><td>'+m.n+'</td><td class="g">'+f1(m.f,2)+'</td><td class="g">'+f1(Math.abs(m.b),3)+'</td>'+(bj?'<td class="g">'+f1(20*Math.log10(m.g),1)+'</td>':'')+'<td class="g">'+(A<1e-9?'—':f1(dB(A,ref),1))+'</td><td class="g">'+f1(m.t60,1)+'</td></tr>';});
+ E(lab,'tblHarm').innerHTML=th;
+ const a1=Math.abs(m1.b)*2*Math.PI*m1.f*Math.abs(m1.pw)*m1.g;
+ let ts='<tr><th>Other string</th><th>Distance (mm)</th><th>Coupling (dB)</th><th>Its harmonic</th><th>Driven by harmonic</th><th>Gap (cents)</th><th>Resonance (%)</th><th>Peak level (dB vs fundamental)</th><th>Time to peak (s)</th></tr>';
+ sy.forEach(g=>{const b=g.list.slice().sort((x,y)=>y.pA-x.pA)[0];
+  ts+='<tr><td>'+props(lab,g.j).name+' ('+props(lab,g.j).nt.name+')</td><td class="g">'+f1(g.d,1)+'</td><td class="g">'+f1(20*Math.log10(g.k),1)+'</td><td class="g">'+(b?b.m:'—')+'</td><td class="g">'+(b?b.n:'—')+'</td><td class="g">'+(b?f1(b.cents,1):'—')+'</td><td class="g">'+(b?f1(b.R*100,0):'—')+'</td><td class="g">'+(b&&b.pA>0&&a1>0?f1(dB(b.pA,a1),1):'—')+'</td><td class="g">'+(b?f1(b.pkt,2):'—')+'</td></tr>';});
+ E(lab,'tblSym').innerHTML=ts;
+ if(bj)headReport();
+ drawCharts(lab);}
+function headReport(){const tp=B.tap,hm=tapModes(tp.r,tp.th,tp.s),Tm=headTm(),maxA=Math.max(...hm.map(h=>Math.abs(h.A)),1e-9),strong=hm.slice().sort((a,b)=>Math.abs(b.A)-Math.abs(a.A))[0];
+ const kv=[['Head diameter',f1(2*R_H,1)+' mm (11 inch)'],['Lowest frequency f₀₁',f1(B.headF,0)+' Hz ('+nearestNote(B.headF).name+', '+(nearestNote(B.headF).cents>=0?'+':'')+f1(nearestNote(B.headF).cents,0)+' cents)'],
+  ['Head tension per length',f1(Tm,0)+' N/m (estimate)'],['Last tap',tp.played?f1(tp.r,0)+' mm from centre at '+f1(tp.th*180/Math.PI,0)+'°, strength ×'+f1(tp.s,2):'none yet (using a default tap at 60 mm)'],
+  ['Strongest head pattern in the tap','('+strong.m+','+strong.n+') at '+f1(strong.f,0)+' Hz'],['Head pattern (0,1) fades 60 dB in',f1(hm[0].t60*1000,0)+' ms'],
+  ['Bridge position','12 mm from the head centre']];
+ $('b_headKV').innerHTML=kv.map(r=>'<div><b>'+r[0]+'</b><span>'+r[1]+'</span></div>').join('');
+ let th='<tr><th>Mode (m, n)</th><th>Ratio to f₀₁</th><th>Frequency (Hz)</th><th>Tap weight Jₘ(jr÷R) cos mθ ÷ Jₘ₊₁(j)²</th><th>Level in tap sound (dB)</th><th>Bridge coupling c</th><th>Fades 60 dB in (ms)</th></tr>';
+ hm.forEach(h=>{th+='<tr><td>('+h.m+', '+h.n+')</td><td class="g">'+f1(h.ratio,3)+'</td><td class="g">'+f1(h.f,1)+'</td><td class="g">'+f1(h.w,3)+'</td><td class="g">'+(Math.abs(h.A)<1e-6?'—':f1(dB(Math.abs(h.A),maxA),1))+'</td><td class="g">'+f1(h.c,2)+'</td><td class="g">'+f1(h.t60*1000,0)+'</td></tr>';});
+ $('b_tblHead').innerHTML=th;}
+function drawCharts(lab){const AN=lab.AN;if(!AN)return;const{items,modes,sy,P,maxA}=AN,bj=lab.kind==='banjo',pre=lab.pre,tapMode=bj&&lab.last.type==='tap'&&B.tap.played;
+ let o=fit(E(lab,'chSpec'),210),fmax=Math.min(8000,Math.max(2000,Math.ceil(P.f0*14/500)*500));if(tapMode)fmax=Math.max(fmax,Math.ceil(B.headF*3.7/500)*500);
+ let fr=frame(o,[0,fmax],[-70,0],[0,fmax/4,fmax/2,fmax*3/4,fmax],[-60,-40,-20,0],'frequency (Hz)','level (dB)',v=>Math.round(v),v=>v);
+ let list=[],dots=[];
+ if(tapMode){const hm=tapModes(B.tap.r,B.tap.th,B.tap.s),tsy=tapSymp(hm);hm.forEach(h=>list.push({f:h.f,A:Math.abs(h.A)}));tsy.forEach(g=>g.list.forEach(m=>{const pk=envPeak({a:m.a,gam:m.gam},B.dur);dots.push({f:m.f,A:pk.v*2*Math.PI*m.f});}));}
+ else{items.forEach(t=>{if(t.type==='p')list.push({f:t.f,A:t.A});else dots.push({f:t.f,A:t.A});});}
+ const mx=Math.max(...list.map(t=>t.A),...dots.map(t=>t.A),1e-9);
+ o.x.lineWidth=2;o.x.strokeStyle=GR;o.x.shadowColor=GR;o.x.shadowBlur=5;
+ for(const t of list){if(t.f>fmax)continue;const d=Math.max(-70,dB(t.A,mx));o.x.beginPath();o.x.moveTo(fr.X(t.f),fr.Y(-70));o.x.lineTo(fr.X(t.f),fr.Y(d));o.x.stroke();}
+ o.x.shadowBlur=0;o.x.fillStyle='#fff';for(const t of dots){if(t.f>fmax)continue;const d=dB(t.A,mx);if(d<-70)continue;o.x.beginPath();o.x.arc(fr.X(t.f),fr.Y(d),3,0,7);o.x.fill();}
+ if(E(lab,'chWave')){const N=Math.round(FS*0.04),w=toBuf(renderList(srcPluck(lab,lab.last.i,lab.last.p,lab.last.h,true).list,N));o=fit(E(lab,'chWave'),210);
+  fr=frame(o,[0,40],[-1,1],[0,10,20,30,40],[-1,-.5,0,.5,1],'time (ms)','signal',v=>v,v=>v);
+  o.x.strokeStyle=GR;o.x.lineWidth=1.6;o.x.shadowColor=GR;o.x.shadowBlur=5;o.x.beginPath();for(let k=0;k<N;k+=2){const px=fr.X(k/FS*1000),py=fr.Y(w[k]);if(k===0)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;}
+ if(E(lab,'chHead')){o=fit(E(lab,'chHead'),210);const fm=3000;fr=frame(o,[0,fm],[0,14],[0,500,1000,1500,2000,2500,3000],[0,3,6,9,12],'frequency (Hz)','head boost (dB)',v=>v,v=>v);
+  o.x.strokeStyle=GR;o.x.lineWidth=2;o.x.shadowColor=GR;o.x.shadowBlur=5;o.x.beginPath();for(let f=20;f<=fm;f+=4){const d=20*Math.log10(headGain(f));const px=fr.X(f),py=fr.Y(Math.min(14,d));if(f===20)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;
+  o.x.setLineDash([3,4]);o.x.strokeStyle='#fff';HEAD.forEach(h=>{const f=B.headF*h.ratio;if(f>fm)return;o.x.beginPath();o.x.moveTo(fr.X(f),fr.Y(0));o.x.lineTo(fr.X(f),fr.Y(14));o.x.stroke();});o.x.setLineDash([]);
+  if(!tapMode){o.x.fillStyle='#fff';for(const t of items){if(t.type!=='p'||t.f>fm)continue;const d=20*Math.log10(headGain(t.f));o.x.beginPath();o.x.arc(fr.X(t.f),fr.Y(Math.min(14,d)),3,0,7);o.x.fill();}}}
+ o=fit(E(lab,'chLev'),210);fr=frame(o,[0,lab.dur],[-70,0],[0,1,2,3,4,5,6,7].filter(v=>v<=lab.dur),[-60,-40,-20,0],'time (s)','level (dB)',v=>v,v=>v);
+ let main=null;if(tapMode){const hm=tapModes(B.tap.r,B.tap.th,B.tap.s);main={A:Math.abs(hm[0].A),gam:hm[0].gam};}else{const m1=modes[0];main={A:Math.abs(m1.b)*2*Math.PI*m1.f*Math.abs(m1.pw)*m1.g,gam:m1.gam};}
+ let bestS=null;if(tapMode){tapSymp(tapModes(B.tap.r,B.tap.th,B.tap.s)).forEach(g=>g.list.forEach(m=>{if(!bestS||m.A>bestS.A)bestS=m;}));}else sy.forEach(g=>g.list.forEach(m=>{if(!bestS||m.pA>bestS.pA)bestS=m;}));
+ if(main.A>1e-9){o.x.strokeStyle=GR;o.x.lineWidth=2;o.x.shadowColor=GR;o.x.shadowBlur=5;o.x.beginPath();for(let t=0;t<=lab.dur;t+=0.01){const d=Math.max(-70,-8.686*main.gam*t);const px=fr.X(t),py=fr.Y(d);if(t===0)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;}
+ if(bestS&&main.A>1e-9){o.x.strokeStyle='#fff';o.x.lineWidth=1.6;o.x.beginPath();let st=false;for(let t=0.01;t<=lab.dur;t+=0.02){const a=tapMode?bestS.A:2*Math.PI*bestS.f*Math.abs(bestS.pw)*bestS.g*bestS.a;const v=a*Math.exp(-bestS.gam*t)*(1-Math.exp(-t/TAU_R));const d=Math.max(-70,dB(v,main.A));const px=fr.X(t),py=fr.Y(d);if(!st){o.x.moveTo(px,py);st=true;}else o.x.lineTo(px,py);}o.x.stroke();}
+ o=fit(E(lab,'chCoup'),210);fr=frame(o,[3,30],[-35,-10],[3,6,9,12,15,18,21,24,27,30],[-30,-25,-20,-15,-10],'distance between strings (mm)','coupling (dB)',v=>v,v=>v);
+ o.x.strokeStyle=GR;o.x.lineWidth=2;o.x.shadowColor=GR;o.x.shadowBlur=5;o.x.beginPath();
+ for(let d=3;d<=30;d+=0.5){const k=20*Math.log10(K0/(1+(d/D0)**2));const px=fr.X(d),py=fr.Y(k);if(d===3)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;
+ o.x.setLineDash([4,4]);o.x.strokeStyle='#fff';o.x.fillStyle='#fff';o.x.textAlign='left';
+ sy.forEach((g,ix)=>{const px=fr.X(Math.min(30,Math.max(3,g.d))),py=fr.Y(20*Math.log10(g.k));o.x.beginPath();o.x.moveTo(px,fr.Y(-35));o.x.lineTo(px,fr.Y(-10));o.x.stroke();o.x.fillText((bj?lab.names(g.j).slice(0,3):'S'+(g.j+1))+' '+f1(g.d,1)+' mm',px+4,fr.Y(-12)+(ix%4)*12);o.x.beginPath();o.x.arc(px,py,3,0,7);o.x.fill();});
+ o.x.setLineDash([]);}
+
+/* ---------- analyser: live and saved FFT / wave ---------- */
+function scopeHTML(pre){return '<h3 style="margin-top:14px">Sound analyser: wave and FFT of any sound from this page</h3><div class="charts">'+
+ '<div><canvas id="'+pre+'scW"></canvas><div class="cap">Live sound wave (last 46 ms). It moves while a sound is playing.</div></div>'+
+ '<div><canvas id="'+pre+'scF"></canvas><div class="cap">Live FFT: level of each frequency in the sound right now.</div></div>'+
+ '<div><canvas id="'+pre+'cpW"></canvas><div class="cap" id="'+pre+'cpWcap">Saved wave of the last sound.</div></div>'+
+ '<div><canvas id="'+pre+'cpF"></canvas><div class="cap">FFT of the last sound (Hann window). 0 dB is the strongest frequency.</div></div></div>'+
+ '<div class="tw" style="margin-top:8px"><table id="'+pre+'cpT"></table></div>'+
+ '<div class="row"><button id="'+pre+'btnWAVs">Save sound (WAV)</button><button id="'+pre+'btnPk">Save FFT peaks (CSV)</button></div>';}
+$('scopeG').innerHTML=scopeHTML('');$('scopeB').innerHTML=scopeHTML('b_');
+function fftReal(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+ for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const a=i+k,b=a+len/2,tr=re[b]*cr-im[b]*ci,ti=re[b]*ci+im[b]*cr;re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t;}}}}
+function spectrum(buf,start,n){const re=new Float64Array(n),im=new Float64Array(n);for(let k=0;k<n;k++)re[k]=(buf[start+k]||0)*(0.5-0.5*Math.cos(2*Math.PI*k/(n-1)));fftReal(re,im);const m=new Float64Array(n/2);for(let k=0;k<n/2;k++)m[k]=Math.hypot(re[k],im[k]);return m;}
+function capture(lab){const tap=lab.bufKind==='tap',n=tap?8192:65536,start=tap?0:Math.round(0.05*FS),mag=spectrum(lab.buf,start,n);let mx=1e-12;for(let k=1;k<mag.length;k++)mx=Math.max(mx,mag[k]);
+ const bin=FS/n,peaks=[];for(let k=Math.ceil(20/bin);k<Math.min(mag.length-1,Math.floor(6000/bin));k++){if(mag[k]>mag[k-1]&&mag[k]>=mag[k+1]){const db=20*Math.log10(mag[k]/mx);if(db>-60){const a=Math.log(mag[k-1]+1e-12),b=Math.log(mag[k]+1e-12),c=Math.log(mag[k+1]+1e-12),d=0.5*(a-c)/(a-2*b+c);peaks.push({f:(k+d)*bin,db});}}}
+ peaks.sort((x,y)=>y.db-x.db);lab.cap={mag,mx,n,bin,kind:lab.bufKind,peaks:peaks.slice(0,10)};drawCaptured(lab);}
+function labelOf(lab,f){if(lab.bufKind==='sfx')return 'Sound effect: '+(lab.sfxName||'');let best=null,bd=1e9;for(const l of lab.labels){const d=Math.abs(l.f-f);if(d<bd){bd=d;best=l;}}return best&&bd<Math.max(3,2*(lab.cap?lab.cap.bin:5))?best.t:'—';}
+function drawCaptured(lab){const pre=lab.pre,cw=$(pre+'cpW'),cf=$(pre+'cpF');if(!cw||!cw.clientWidth)return;
+ let o=fit(cw,170);const tap=lab.bufKind==='tap',T=tap?100:40;let fr=frame(o,[0,T],[-1,1],tap?[0,25,50,75,100]:[0,10,20,30,40],[-1,0,1],'time (ms)','signal',v=>v,v=>v);
+ $(pre+'cpWcap').textContent='Saved wave of the last sound (first '+T+' ms).';
+ if(lab.buf){const N=Math.round(FS*T/1000);o.x.strokeStyle=GR;o.x.lineWidth=1.6;o.x.shadowColor=GR;o.x.shadowBlur=5;o.x.beginPath();for(let k=0;k<N;k+=2){const px=fr.X(k/FS*1000),py=fr.Y(lab.buf[k]);if(k===0)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;}
+ o=fit(cf,170);fr=frame(o,[0,4000],[-90,0],[0,500,1000,1500,2000,2500,3000,3500,4000],[-80,-60,-40,-20,0],'frequency (Hz)','level (dB)',v=>v,v=>v);
+ let tb='<tr><th>Peak</th><th>Frequency (Hz)</th><th>Level (dB)</th><th>Nearest note</th><th>Source in the model</th></tr>';
+ if(lab.cap){const c=lab.cap;o.x.strokeStyle=GR;o.x.lineWidth=1.4;o.x.shadowColor=GR;o.x.shadowBlur=4;o.x.beginPath();let st=false;
+  for(let k=1;k<c.mag.length;k++){const f=k*c.bin;if(f>4000)break;const d=Math.max(-90,20*Math.log10(c.mag[k]/c.mx+1e-12));const px=fr.X(f),py=fr.Y(d);if(!st){o.x.moveTo(px,py);st=true;}else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;
+  o.x.fillStyle='#fff';c.peaks.slice(0,5).forEach(p=>{if(p.f>4000)return;o.x.beginPath();o.x.arc(fr.X(p.f),fr.Y(p.db),3,0,7);o.x.fill();});
+  c.peaks.forEach((p,i)=>{const nt=nearestNote(p.f);tb+='<tr><td>'+(i+1)+'</td><td class="g">'+f1(p.f,1)+'</td><td class="g">'+f1(p.db,1)+'</td><td class="g">'+nt.name+' ('+(nt.cents>=0?'+':'')+f1(nt.cents,0)+' cents)</td><td class="g">'+labelOf(lab,p.f)+'</td></tr>';});}
+ else tb+='<tr><td colspan="5">Make a sound to see its FFT.</td></tr>';
+ $(pre+'cpT').innerHTML=tb;}
+const tbuf=new Float32Array(8192),fbuf=new Float32Array(4096);
+function liveDraw(lab){const wc=$(lab.pre+'scW'),fc=$(lab.pre+'scF');if(!wc||!wc.clientWidth)return;
+ const run=an&&ac&&ac.state==='running';let o=fit(wc,170),fr=frame(o,[0,46],[-1,1],[0,10,20,30,40],[-1,0,1],'time (ms)','signal',v=>v,v=>v);
+ if(run){an.getFloatTimeDomainData(tbuf);const N=Math.round(0.046*ac.sampleRate),off=tbuf.length-N;o.x.strokeStyle=GR;o.x.lineWidth=1.4;o.x.beginPath();for(let k=0;k<N;k+=2){const px=fr.X(k/ac.sampleRate*1000),py=fr.Y(Math.max(-1,Math.min(1,tbuf[off+k]*1.0)));if(k===0)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();}
+ o=fit(fc,170);fr=frame(o,[0,4000],[-100,0],[0,500,1000,1500,2000,2500,3000,3500,4000],[-80,-60,-40,-20,0],'frequency (Hz)','level (dB)',v=>v,v=>v);
+ if(run){an.getFloatFrequencyData(fbuf);const bh=ac.sampleRate/an.fftSize;o.x.strokeStyle=GR;o.x.lineWidth=1.4;o.x.shadowColor=GR;o.x.shadowBlur=3;o.x.beginPath();let st=false;for(let k=1;k<fbuf.length;k++){const f=k*bh;if(f>4000)break;const px=fr.X(f),py=fr.Y(Math.max(-100,Math.min(0,fbuf[k])));if(!st){o.x.moveTo(px,py);st=true;}else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;}}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+function wavBlob(buf){const n=buf.length,ab=new ArrayBuffer(44+n*2),dv=new DataView(ab),ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+ ws(0,'RIFF');dv.setUint32(4,36+n*2,true);ws(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,FS,true);dv.setUint32(28,FS*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,n*2,true);
+ for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.max(-1,Math.min(1,buf[i]))*32767,true);return new Blob([ab],{type:'audio/wav'});}
+function peaksCSV(lab){const rows=[['IDEA-AS String Lab v1.2',lab.kind],['Peak','Frequency Hz','Level dB (0 = strongest)','Nearest note','Cents','Source in the model']];
+ if(lab.cap)lab.cap.peaks.forEach((p,i)=>{const nt=nearestNote(p.f);rows.push([i+1,p.f.toFixed(2),p.db.toFixed(2),nt.name,nt.cents.toFixed(1),labelOf(lab,p.f)]);});return rows.map(r=>r.join(',')).join('\n');}
+function sendBuf(lab){return lab.buf||toBuf(renderList(srcPluck(lab,lab.last.i,lab.last.p,lab.last.h,true).list,FS*lab.dur));}
+[G,B].forEach(lab=>{$(lab.pre+'btnWAVs').onclick=()=>dl(wavBlob(sendBuf(lab)),'IDEA-AS-String-Lab-'+lab.kind+'.wav');$(lab.pre+'btnPk').onclick=()=>dl(new Blob([peaksCSV(lab)],{type:'text/csv'}),'IDEA-AS-String-Lab-'+lab.kind+'-peaks.csv');});
+function csvText(){const A=G.AN||analyse(G),r=[];r.push(['IDEA-AS String Lab v1.2 guitar']);r.push(['Plucked string',A.P.name,A.P.nt.name]);r.push(['Scale length mm',G.L]);r.push(['Pluck position fraction',A.p.toFixed(4)]);r.push(['Pluck height mm',A.h.toFixed(3)]);r.push(['Pickup fraction',G.q]);r.push(['Sustain factor',G.sust]);
+ r.push([]);r.push(['String','Note','f1 Hz','String size','mu g/m','T N','v m/s','Height mm']);
+ for(let i=0;i<3;i++){const P=props(G,i);r.push([P.name,P.nt.name,P.f0.toFixed(3),P.g.label,(P.mu*1000).toFixed(3),P.T.toFixed(2),P.v.toFixed(2),G.y[i].toFixed(2)]);}
+ r.push([]);r.push(['n','Frequency Hz','Motion size mm','Level at pickup dB','Fade 60 dB s']);
+ const ref=Math.max(...A.modes.map(m=>Math.abs(m.b)*2*Math.PI*m.f*Math.abs(m.pw)),1e-12);
+ A.modes.forEach(m=>{const a=Math.abs(m.b)*2*Math.PI*m.f*Math.abs(m.pw);r.push([m.n,m.f.toFixed(3),Math.abs(m.b).toFixed(4),a<1e-9?'':dB(a,ref).toFixed(2),m.t60.toFixed(2)]);});
+ return r.map(x=>x.join(',')).join('\n');}
+$('btnCSV').onclick=()=>dl(new Blob([csvText()],{type:'text/csv'}),'IDEA-AS-String-Lab-data.csv');
+
+/* ---------- tabs and loop ---------- */
+let page='g';
+function showPage(p){page=p;$('pgG').hidden=p!=='g';$('pgB').hidden=p!=='b';$('tabG').classList.toggle('on',p==='g');$('tabB').classList.toggle('on',p==='b');relayout();}
+$('tabG').onclick=()=>showPage('g');$('tabB').onclick=()=>showPage('b');
+function relayout(){if(page==='g'){fitMain();updateScaleNote();report(G);drawCaptured(G);}else{fitBanjo();updateScaleNoteB();report(B);drawCaptured(B);}}
+function updateScaleNote(){const g=ggeo();$('scaleNote').textContent='Picture scale: '+f1(g.sx,2)+' pixels per mm along the string and '+g.sy+' pixels per mm up and down, so the picture is stretched up and down about ×'+f1(g.sy/g.sx,0)+'. Spacing numbers are true millimetres.';}
+function updateScaleNoteB(){const g=bgeo();$('b_scaleNote').textContent='Picture scale: '+f1(g.sc,2)+' pixels per mm in both directions, so the banjo is drawn to scale. Motion is drawn bigger by the "make the motion look bigger" setting (×'+f1(B.big,1)+'). The strings are drawn parallel; the spacing end view on the left of the settings is stretched ×5.2.';}
+
+function overlayDraw(){const g=bgeo(),sb=cvB.parentNode,pad=6,tooSmall=g.W<860;placePad(g,tooSmall);ovW.style.display=ovF.style.display=tooSmall?'none':'block';if(tooSmall)return;
+ const left=pad+6,wd=Math.round(g.cxh-g.R-left-14),h1=Math.round(g.cy-36*g.sc-12-pad),t2=Math.round(g.cy+26*g.sc+8+pad),h2=Math.round(g.H-t2);
+ if(h1<80||h2<80||wd<200){ovW.style.display=ovF.style.display='none';return;}
+ ovW.style.left=ovF.style.left=left+'px';ovW.style.width=ovF.style.width=wd+'px';ovW.style.top=(pad+2)+'px';ovF.style.top=(t2+pad)+'px';
+ const run=an&&ac&&ac.state==='running';let o=fit(ovW,h1),fr=frame(o,[0,46],[-1,1],[0,10,20,30,40],[-1,0,1],'time (ms)','wave',v=>v,v=>v);
+ o.x.fillStyle='#fff';o.x.font='11px "DM Mono",ui-monospace,Consolas,monospace';o.x.textAlign='left';o.x.fillText('LIVE WAVE',54,22);
+ if(run){an.getFloatTimeDomainData(tbuf);const N=Math.round(0.046*ac.sampleRate),off=tbuf.length-N;o.x.strokeStyle=GR;o.x.lineWidth=1.5;o.x.shadowColor=GR;o.x.shadowBlur=4;o.x.beginPath();for(let k=0;k<N;k+=2){const px=fr.X(k/ac.sampleRate*1000),py=fr.Y(Math.max(-1,Math.min(1,tbuf[off+k])));if(k===0)o.x.moveTo(px,py);else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;}
+ o=fit(ovF,h2);fr=frame(o,[0,4000],[-100,0],[0,500,1000,1500,2000,2500,3000,3500,4000],[-80,-60,-40,-20,0],'frequency (Hz)','dB',v=>v,v=>v);
+ o.x.fillStyle='#fff';o.x.font='11px "DM Mono",ui-monospace,Consolas,monospace';o.x.textAlign='left';
+ let txt='LIVE FFT: play a sound';
+ if(run){an.getFloatFrequencyData(fbuf);const bh=ac.sampleRate/an.fftSize;o.x.strokeStyle=GR;o.x.lineWidth=1.5;o.x.shadowColor=GR;o.x.shadowBlur=3;o.x.beginPath();let st=false,pk=-200,pi=0;
+  for(let k=1;k<fbuf.length;k++){const f=k*bh;if(f>4000)break;const d=Math.max(-100,Math.min(0,fbuf[k]));if(fbuf[k]>pk&&f>40){pk=fbuf[k];pi=k;}const px=fr.X(f),py=fr.Y(d);if(!st){o.x.moveTo(px,py);st=true;}else o.x.lineTo(px,py);}o.x.stroke();o.x.shadowBlur=0;
+  if(pk>-75){const a=fbuf[pi-1],b2=fbuf[pi],c=fbuf[pi+1],dd=0.5*(a-c)/(a-2*b2+c),f=(pi+(isFinite(dd)?dd:0))*bh,nt=nearestNote(f);txt='LIVE FFT   strongest now: '+f.toFixed(1)+' Hz  ('+nt.name+', '+(nt.cents>=0?'+':'')+nt.cents.toFixed(0)+' cents)  '+pk.toFixed(0)+' dB';
+   o.x.fillStyle='#fff';o.x.beginPath();o.x.arc(fr.X(f),fr.Y(Math.max(-100,pk)),3.5,0,7);o.x.fill();}else txt='LIVE FFT   quiet';}
+ o.x.fillStyle='#fff';o.x.fillText(txt,54,22);}
+function loop(now){if(page==='g'){drawG(now);liveDraw(G);}else{drawB(now);overlayDraw();liveDraw(B);}requestAnimationFrame(loop);}
+function init(){buildCards(G,'strCards','',null);buildCards(B,'b_cards','b_',null);syncGapsG();syncGapsB();calcNorm();fitMain();readouts(G);readouts(B);updateScaleNote();report(G);report(B);drawCaptured(G);drawCaptured(B);
+ window.addEventListener('resize',()=>{relayout();});requestAnimationFrame(loop);}
+
+/* ---------- sound buttons: made by the page, no recordings ---------- */
+function mkRng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+const lerp=(a,b,u)=>a+(b-a)*u,envU=(u,a,r)=>Math.max(0,Math.min(1,u/a,(1-u)/r));
+function voice(out,off,s,rnd){const n=Math.round(s.dur*FS),fb=[0,1,2].map(()=>({b0:0,b2:0,a1:0,a2:0,x1:0,x2:0,y1:0,y2:0}));let ph=0;
+ for(let k=0;k<n&&off+k<out.length;k++){const u=k/n,t=k/FS;let f0=s.f0fn?s.f0fn(u,t):lerp(s.f0[0],s.f0[1],u);if(s.vib)f0*=1+s.vib[0]*Math.sin(2*Math.PI*s.vib[1]*t);if(s.jit)f0*=1+s.jit*(rnd()-0.5);
+  ph+=2*Math.PI*f0/FS;const H=Math.min(30,Math.floor(5500/f0));let src=0;for(let h=1;h<=H;h++)src+=Math.sin(h*ph)/Math.pow(h,1.1);
+  src=src*0.35+s.noise*(rnd()*2-1);
+  if(k%16===0){for(let q=0;q<3;q++){const fc=lerp(s.F[q][0],s.F[q][1],u),w=2*Math.PI*fc/FS,al=Math.sin(w)/(2*(fc/s.bw[q])),a0=1+al,c=fb[q];c.b0=al/a0;c.b2=-al/a0;c.a1=-2*Math.cos(w)/a0;c.a2=(1-al)/a0;}}
+  let y=0;for(let q=0;q<3;q++){const c=fb[q],o=c.b0*src+c.b2*c.x2-c.a1*c.y1-c.a2*c.y2;c.x2=c.x1;c.x1=src;c.y2=c.y1;c.y1=o;y+=o*s.g[q];}
+  out[off+k]+=y*(s.amp?s.amp(u,t):1)*(s.gain||1);}}
+function hiss(out,off,dur,flo,fhi,amp,rnd){const n=Math.round(dur*FS),fc=Math.sqrt(flo*fhi),q=fc/(fhi-flo),w=2*Math.PI*fc/FS,al=Math.sin(w)/(2*q),a0=1+al,b0=al/a0,b2=-al/a0,a1=-2*Math.cos(w)/a0,a2=(1-al)/a0;let x1=0,x2=0,y1=0,y2=0;
+ for(let k=0;k<n&&off+k<out.length;k++){const x=rnd()*2-1,y=b0*x+b2*x2-a1*y1-a2*y2;x2=x1;x1=x;y2=y1;y1=y;out[off+k]+=y*amp*envU(k/n,0.1,0.35)*3;}}
+function norm(o,pk){let m=1e-9;for(let k=0;k<o.length;k++)m=Math.max(m,Math.abs(o[k]));const g=pk/m;for(let k=0;k<o.length;k++)o[k]*=g;return o;}
+const SFXGEN={
+ scream(){const rnd=mkRng(11),o=new Float32Array(Math.round(1.7*FS));
+  voice(o,0,{dur:1.7,f0fn:(u)=>u<0.16?300+420*(u/0.16):(u<0.7?720-170*((u-0.16)/0.54):550-190*((u-0.7)/0.3)),vib:[0.03,5.5],jit:0.02,F:[[900,1000],[1350,1500],[2600,2800]],bw:[130,160,240],g:[1,0.75,0.5],noise:0.3,amp:(u)=>envU(u,0.02,0.22)},rnd);
+  for(let k=0;k<o.length;k++)o[k]=Math.tanh(2.2*o[k]/1.2);return norm(o,0.55);},
+ boing(){const o=new Float32Array(Math.round(1.0*FS));let ph=0;for(let k=0;k<o.length;k++){const t=k/FS,f=180+520*Math.exp(-3.2*t)+140*Math.exp(-1.8*t)*Math.sin(2*Math.PI*11*t);ph+=2*Math.PI*f/FS;o[k]=(Math.sin(ph)+0.35*Math.sin(2*ph+0.5)+0.12*Math.sin(3*ph))*Math.exp(-2.2*t)*Math.min(1,t/0.004);}return norm(o,0.55);},
+ duck(){const rnd=mkRng(5),o=new Float32Array(Math.round(0.75*FS)),q=(off,d,a,b)=>voice(o,Math.round(off*FS),{dur:d,f0:[a,b],jit:0.03,F:[[700,520],[1350,1100],[2700,2500]],bw:[90,120,200],g:[1,0.8,0.4],noise:0.12,amp:(u)=>envU(u,0.05,0.4)},rnd);q(0.02,0.2,420,300);q(0.3,0.17,380,270);return norm(o,0.55);},
+ pig(){const rnd=mkRng(9),o=new Float32Array(Math.round(1.3*FS)),oink=(off,sc)=>{
+   voice(o,Math.round(off*FS),{dur:0.28*sc,f0:[200,150],jit:0.04,F:[[450,500],[800,900],[2400,2400]],bw:[90,100,200],g:[1,0.7,0.25],noise:0.12,amp:(u,t)=>envU(u,0.1,0.3)*(0.7+0.3*Math.sin(2*Math.PI*28*t))},rnd);
+   voice(o,Math.round((off+0.28*sc)*FS),{dur:0.3*sc,f0:[150,330],jit:0.06,F:[[400,350],[1100,1900],[2400,2800]],bw:[110,150,250],g:[1,0.6,0.3],noise:0.35,amp:(u)=>envU(u,0.1,0.4)},rnd);};
+  oink(0.02,1);oink(0.7,0.8);return norm(o,0.55);},
+ game(){const o=new Float32Array(Math.round(0.85*FS)),N=[523.25,659.25,783.99,1046.5,1318.5,1568],L=0.07;let ph=0;for(let k=0;k<o.length;k++){const t=k/FS,i=Math.min(5,Math.floor(t/L)),f=N[i],last=t>=5*L;ph+=2*Math.PI*f/FS;const e=last?Math.exp(-(t-5*L)*5):1;o[k]=(Math.sin(ph)>=0?1:-1)*e*(t<L*5+0.4?1:0)*Math.min(1,t/0.002);}return norm(o,0.4);},
+ no(){const rnd=mkRng(21),o=new Float32Array(Math.round(0.8*FS));
+  voice(o,0,{dur:0.1,f0:[125,130],F:[[250,260],[1100,1100],[2300,2300]],bw:[100,200,300],g:[1,0.15,0.05],noise:0,amp:(u)=>envU(u,0.2,0.2)*0.6},rnd);
+  voice(o,Math.round(0.09*FS),{dur:0.55,f0:[135,92],vib:[0.01,5],F:[[560,420],[900,720],[2400,2300]],bw:[90,100,160],g:[1,0.6,0.2],noise:0.03,amp:(u)=>envU(u,0.08,0.4)},rnd);return norm(o,0.55);},
+ thisidea(){const rnd=mkRng(33),o=new Float32Array(Math.round(1.25*FS)),S=(t)=>Math.round(t*FS);
+  hiss(o,S(0.02),0.05,3000,8000,0.05,rnd);
+  voice(o,S(0.07),{dur:0.09,f0:[118,125],F:[[400,400],[1900,1900],[2600,2600]],bw:[90,130,200],g:[1,0.6,0.2],noise:0.02,amp:(u)=>envU(u,0.2,0.3)},rnd);
+  hiss(o,S(0.16),0.12,4500,9000,0.35,rnd);
+  voice(o,S(0.34),{dur:0.26,f0:[120,135],F:[[750,300],[1250,2200],[2500,3000]],bw:[100,110,170],g:[1,0.7,0.3],noise:0.02,amp:(u)=>envU(u,0.1,0.25)},rnd);
+  hiss(o,S(0.65),0.012,2500,5500,0.4,rnd);
+  voice(o,S(0.70),{dur:0.17,f0:[140,125],F:[[290,290],[2250,2250],[3000,3000]],bw:[80,120,200],g:[1,0.7,0.3],noise:0.02,amp:(u)=>envU(u,0.12,0.25)},rnd);
+  voice(o,S(0.86),{dur:0.34,f0:[118,90],F:[[500,520],[1450,1500],[2500,2500]],bw:[90,110,170],g:[1,0.5,0.2],noise:0.03,amp:(u)=>envU(u,0.1,0.6)},rnd);return norm(o,0.55);},
+ trumpet(){const rnd=mkRng(3),o=new Float32Array(Math.round(1.3*FS));let ph=0;for(let k=0;k<o.length;k++){const t=k/FS,vib=t>0.3?0.006*Math.min(1,(t-0.3)/0.3)*Math.sin(2*Math.PI*5.2*t):0,f=466.16*(1+vib);ph+=2*Math.PI*f/FS;
+   const b=0.5+0.4*(1-Math.exp(-t/0.06)),a=Math.min(1,t/0.07)*(t<1.1?1:Math.max(0,1-(t-1.1)/0.2));let y=0,hm=Math.min(14,Math.floor(10000/f));for(let h=1;h<=hm;h++)y+=Math.pow(b,h-1)*Math.sin(h*ph);
+   o[k]=(y*a)+0.05*(rnd()*2-1)*Math.exp(-t/0.05);}return norm(o,0.5);},
+ gong(){const D=5,o=new Float32Array(Math.round(D*FS)),base=138.6,R=[1,1.47,2.09,2.56,3.17,3.78,4.31,5.12,6.4,7.6],A=[1,0.8,0.6,0.5,0.4,0.3,0.25,0.15,0.1,0.07],rnd=mkRng(7);
+  const P=[];R.forEach((r,i)=>{P.push({f:base*r,a:A[i],tr:0.02+0.1*i,tau:3.4/(1+0.45*i)});if(i<3)P.push({f:base*r+1.3+0.4*i,a:A[i]*0.7,tr:0.02+0.1*i,tau:3.4/(1+0.45*i)});});
+  for(const p of P){const w=2*Math.PI*p.f/FS;let ph=0;for(let k=0;k<o.length;k++){const t=k/FS;ph+=w;o[k]+=p.a*(1-Math.exp(-t/p.tr))*Math.exp(-t/p.tau)*Math.sin(ph);}}
+  for(let k=0;k<0.012*FS;k++)o[k]+=0.3*(rnd()*2-1)*(1-k/(0.012*FS));return norm(o,0.5);},
+ robot(){const D=2.4,o=new Float32Array(Math.round(D*FS)),pat=[0,2,4,5,7,9,11,12],base=262;let pc=0,pm=0;for(let k=0;k<o.length;k++){const t=k/FS;let f,gate;
+   if(t<1.5){const st=Math.floor(t/0.12)%8,sp=Math.pow(2,pat[st]/12);f=base*sp;gate=((t%0.12)<0.085?1:0)*Math.min(1,(t%0.12)/0.004)*Math.exp(-(t%0.12)*8);}
+   else{const u=(t-1.5)/0.9;f=lerp(900,180,u);gate=Math.max(0,1-u)*(0.6+0.4*Math.sin(2*Math.PI*22*t));}
+   pc+=2*Math.PI*f/FS;pm+=2*Math.PI*f*2.01/FS;o[k]=Math.sin(pc+2.5*Math.sin(pm))*gate;}return norm(o,0.5);}
+};
+const SFX_LIST=[['scream','Scream'],['boing','Boing'],['duck','Duck'],['pig','Pig'],['game','Game'],['no','No'],['thisidea','This iDEA'],['trumpet','Trumpet'],['gong','Gong'],['robot','Robot']];
+const SFXBUF={};
+function playSfx(key){const nm=(SFX_LIST.find(x=>x[0]===key)||[key,key])[1];if(!SFXBUF[key])SFXBUF[key]=SFXGEN[key]();const buf=SFXBUF[key];
+ B.last.type='sfx';B.sfxKey=key;B.sfxName=nm;B.buf=buf;B.bufKind='sfx';B.labels=[];B.ev=null;play(buf);capture(B);
+ const st=$('b_status');if(st)st.textContent='Sound: '+nm+'. The live graphs and the FFT table show it. Press Play last sound again to repeat it.';}
+let sfxPad=null;
+(function(){sfxPad=document.createElement('div');sfxPad.className='sfxpad';sfxPad.id='sfxPad';sfxPad.setAttribute('role','group');sfxPad.setAttribute('aria-label','Sound buttons. They slowly fade in and out of view. Hover or tab to a button to see it clearly.');
+ SFX_LIST.forEach(([k,nm],i)=>{const b=document.createElement('button');b.type='button';b.textContent=nm;b.id='sfx_'+k;b.setAttribute('aria-label','Play sound: '+nm);b.style.animationDelay=(-i*1.1)+'s';b.onclick=()=>playSfx(k);sfxPad.appendChild(b);});
+ $('cvB').parentNode.appendChild(sfxPad);})();
+function placePad(g,tooSmall){if(!sfxPad)return;const st=$('cvB').parentNode;
+ if(tooSmall){if(!sfxPad.classList.contains('static')){sfxPad.classList.add('static');sfxPad.removeAttribute('style');st.parentNode.insertBefore(sfxPad,st.nextSibling);}sfxPad.hidden=page!=='b';return;}
+ if(sfxPad.classList.contains('static')){sfxPad.classList.remove('static');st.appendChild(sfxPad);}
+ const pad=6,left=pad+6,wd=Math.round(g.cxh-g.R-left-14),x0=left+wd+14,hw=(R_H+12)*g.sc,band=Math.floor(g.cy-hw-7),bh=Math.max(16,Math.floor((band-4)/2));
+ sfxPad.style.left=x0+'px';sfxPad.style.top='8px';sfxPad.style.width=Math.max(120,Math.round(g.W-x0-2))+'px';sfxPad.style.gridTemplateRows='repeat(2,'+bh+'px)';}
+
+window.SL={SFXGEN,SFXBUF,playSfx,placePad,G,B,props,modesFor,sympFor,srcPluck,srcTap,tapModes,tapSymp,renderList,toBuf,renderPluck,pluck,tapHead,ggeo,bgeo,igeo,analyse,csvText,peaksCSV,wavBlob,headGain,headTm,besselJ,HEAD,showPage,capture,spectrum,norm:()=>NORM,liveMax:()=>{if(!an)return -1;an.getFloatTimeDomainData(tbuf);let m=0;for(let k=0;k<tbuf.length;k++)m=Math.max(m,Math.abs(tbuf[k]));return m;},acState:()=>ac?ac.state:'none'};
+init();
+})();
+</script>
+</body>
+</html>

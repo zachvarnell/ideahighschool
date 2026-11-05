@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<!-- iDEA AS Foam Board Glider Simulator v1.1 · 2026-10-18 · v1.1: optional canard and optional winglets added; everything else unchanged. See README.md in this folder. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foam Board Glider Simulator</title>
+<style>
+:root{
+  --bg:#000; --panel:#050b07; --line:#39ff6a; --dim:#1d7a38; --faint:#0f3a1c;
+  --amber:#ffb000; --white:#e9ffef; --cyan:#46d9ff; --red:#ff5a4f;
+  --font:"Consolas","Lucida Console","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--line);font-family:var(--font);font-size:13px}
+button,select,input,textarea{font-family:var(--font);font-size:13px}
+button{background:#000;color:var(--line);border:1px solid var(--dim);padding:4px 10px;cursor:pointer}
+button:hover,button:focus-visible{border-color:var(--line);outline:none;background:#052010}
+button.primary{border-color:var(--line);color:#000;background:var(--line);font-weight:bold}
+button.primary:hover{background:#7dff9f}
+button:disabled{opacity:.4;cursor:default}
+input,select,textarea{background:#000;color:var(--white);border:1px solid var(--dim);padding:3px 5px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--line)}
+input.bad{border-color:var(--amber);color:var(--amber)}
+#app{display:flex;flex-direction:column;height:100vh;min-height:520px}
+header{display:flex;align-items:center;gap:10px;padding:5px 8px;border-bottom:1px solid var(--dim);flex:0 0 auto;flex-wrap:wrap}
+header h1{font-size:15px;margin:0 6px 0 0;letter-spacing:2px;color:var(--line);white-space:nowrap}
+#designTitle{color:var(--white);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav{display:flex;gap:2px;margin-left:auto}
+nav button{border-bottom:none;letter-spacing:1px}
+nav button.on{background:var(--line);color:#000;font-weight:bold}
+.filebtns{display:flex;gap:4px;position:relative}
+#exampleMenu{position:absolute;top:28px;left:0;background:#000;border:1px solid var(--line);z-index:5;display:none;min-width:250px}
+#exampleMenu button{display:block;width:100%;text-align:left;border:none}
+main{flex:1 1 auto;display:flex;min-height:0}
+aside{width:320px;flex:0 0 320px;border-right:1px solid var(--dim);overflow-y:auto;padding:6px 8px;background:var(--panel)}
+.tab{flex:1 1 auto;min-width:0;display:none;padding:6px}
+.tab.on{display:grid}
+h2{font-size:12px;letter-spacing:2px;margin:6px 0 4px;color:var(--line);border-bottom:1px solid var(--faint);padding-bottom:2px}
+h3{font-size:12px;margin:8px 0 3px;color:var(--white);letter-spacing:1px}
+/* parts list */
+.part{display:flex;align-items:center;gap:6px;padding:3px 4px;border:1px solid transparent;cursor:pointer;color:var(--dim)}
+.part:hover{border-color:var(--faint);color:var(--line)}
+.part.sel{border-color:var(--line);color:var(--line);background:#031a0b}
+.part .glyph{width:14px;text-align:center}
+.part input[type=checkbox]{margin:0 0 0 auto;accent-color:#39ff6a}
+.fields{margin-top:6px;border-top:1px solid var(--faint);padding-top:4px}
+.field{display:grid;grid-template-columns:1fr 92px 40px;align-items:center;gap:4px;margin:3px 0}
+.field label{color:var(--white)}
+.field input,.field select{width:100%}
+.field .unit{color:var(--dim)}
+.field.wide{grid-template-columns:1fr}
+.help{color:var(--dim);font-size:11.5px;margin:0 0 6px 0;line-height:1.3}
+.note{color:var(--dim);font-size:11.5px;line-height:1.35}
+/* views */
+.view{position:relative;border:1px solid var(--faint);min-height:0;min-width:0;overflow:hidden}
+.view canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+.view .vlabel{position:absolute;left:6px;top:3px;font-size:11px;letter-spacing:2px;color:var(--dim);pointer-events:none}
+#tab-design{grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr;gap:6px}
+#readouts{overflow-y:auto;border:1px solid var(--faint);padding:6px 8px;min-height:0}
+.ro{display:grid;grid-template-columns:1fr auto;gap:2px 8px;line-height:1.45}
+.ro .k{color:var(--dim)}
+.ro .v{color:var(--white);text-align:right;white-space:nowrap}
+.tag{display:inline-block;padding:0 5px;border:1px solid currentColor;font-size:11px;margin-left:4px}
+.good{color:var(--line)} .warn{color:var(--amber)} .badc{color:var(--red)} .info{color:var(--cyan)}
+.warnlist{margin:6px 0 0;padding:0;list-style:none}
+.warnlist li{margin:4px 0;padding-left:14px;text-indent:-14px;line-height:1.3}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:4px}
+/* flight */
+#tab-flight{grid-template-columns:1fr 1fr 280px;grid-template-rows:1.15fr 1fr;gap:6px}
+#vSide{grid-column:1/3;grid-row:1}
+#vTop{grid-column:1;grid-row:2}
+#vRear{grid-column:2;grid-row:2}
+#results{grid-column:3;grid-row:1/3;border:1px solid var(--faint);padding:6px 8px;overflow-y:auto;min-height:0}
+#chart{width:100%;height:120px;display:block;border:1px solid var(--faint);margin-top:6px}
+.bigbtn{width:100%;padding:8px;font-size:15px;letter-spacing:3px;margin:8px 0 4px}
+.seg{display:flex;gap:2px;margin:4px 0}
+.seg button{flex:1;padding:3px 0}
+.seg button.on{background:var(--dim);color:#000;border-color:var(--line)}
+/* template */
+#tab-template{grid-template-columns:1fr 300px;gap:6px}
+#tplPreview{border:1px solid var(--faint);background:#000;overflow:auto;display:flex;align-items:center;justify-content:center;min-height:0}
+#tplPreview svg{background:#fff;max-width:100%;max-height:100%;height:auto}
+#tplSteps{border:1px solid var(--faint);padding:6px 8px;overflow-y:auto;min-height:0}
+#tplSteps ol{padding-left:18px;margin:4px 0}
+#tplSteps li{margin:4px 0;line-height:1.35;color:var(--white)}
+/* tests */
+#tab-tests{grid-template-columns:1fr 290px;grid-template-rows:auto 1fr;gap:6px}
+#testTableWrap{grid-column:1;grid-row:1/3;overflow:auto;border:1px solid var(--faint);min-height:0}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--faint);padding:3px 5px;text-align:right;white-space:nowrap;font-size:12px}
+th{color:var(--dim);font-weight:normal;position:sticky;top:0;background:#000}
+td{color:var(--white)}
+td.l,th.l{text-align:left}
+#testSummary{border:1px solid var(--faint);padding:6px 8px}
+#testChartWrap{border:1px solid var(--faint);position:relative;min-height:0}
+#testChart{position:absolute;left:0;top:0;width:100%;height:100%}
+.x{border:none;color:var(--dim);padding:0 4px}
+.x:hover{color:var(--red)}
+#toast{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);color:var(--white);padding:6px 12px;display:none;z-index:9}
+#printArea{display:none}
+.blist{border:1px solid var(--faint);padding:4px;margin:4px 0}
+.bitem{border-bottom:1px solid var(--faint);padding:3px 0 5px}
+.bitem:last-child{border-bottom:none}
+.brow{display:grid;grid-template-columns:1fr 58px 58px 22px;gap:4px;align-items:center}
+.brow input,.brow select{width:100%}
+.bhead{display:grid;grid-template-columns:1fr 58px 58px 22px;gap:4px;color:var(--dim);font-size:11px}
+@media print{
+  #app,#toast{display:none!important}
+  #printArea{display:block}
+  html,body{background:#fff;margin:0}
+  .page{page-break-after:always;break-after:page;position:relative;overflow:hidden}
+  .page:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+<style id="pageStyle">@page{size:letter portrait;margin:0}</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>FOAM BOARD GLIDER SIMULATOR</h1>
+    <span id="designTitle"></span>
+    <div class="filebtns">
+      <button id="btnNew" title="Start from an example design">New ▾</button>
+      <div id="exampleMenu" role="menu">
+        <button data-ex="folded">Foam Glider One (airfoil wing)</button>
+        <button data-ex="flat">Flat-Wing Trainer</button>
+        <button data-ex="winglets">Foam Glider One + winglets</button>
+        <button data-ex="canard">Canard Glider (forward wing)</button>
+      </div>
+      <button id="btnOpen" title="Open a saved design file">Open</button>
+      <button id="btnSave" title="Download this design as a file">Save</button>
+      <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+    </div>
+    <nav>
+      <button data-tab="design" class="on">DESIGN</button>
+      <button data-tab="flight">FLIGHT</button>
+      <button data-tab="template">CUTTING TEMPLATE</button>
+      <button data-tab="tests">TEST FLIGHTS</button>
+    </nav>
+  </header>
+  <main>
+    <aside id="aside"></aside>
+    <section class="tab on" id="tab-design">
+      <div class="view" id="dTop"><canvas></canvas><span class="vlabel">TOP VIEW</span></div>
+      <div class="view" id="dRear"><canvas></canvas><span class="vlabel">REAR VIEW</span></div>
+      <div class="view" id="dSide"><canvas></canvas><span class="vlabel">SIDE VIEW (FROM LEFT)</span></div>
+      <div id="readouts"></div>
+    </section>
+    <section class="tab" id="tab-flight">
+      <div class="view" id="vSide"><canvas></canvas><span class="vlabel">SIDE VIEW</span></div>
+      <div class="view" id="vTop"><canvas></canvas><span class="vlabel">TOP VIEW</span></div>
+      <div class="view" id="vRear"><canvas></canvas><span class="vlabel">REAR VIEW</span></div>
+      <div id="results"></div>
+    </section>
+    <section class="tab" id="tab-template">
+      <div id="tplPreview"></div>
+      <div id="tplSteps"></div>
+    </section>
+    <section class="tab" id="tab-tests">
+      <div id="testTableWrap"></div>
+      <div id="testSummary"></div>
+      <div id="testChartWrap"><canvas id="testChart"></canvas></div>
+    </section>
+  </main>
+</div>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+/* =====================================================================
+   Foam Board Glider Simulator — physics engine
+   ---------------------------------------------------------------------
+   Coordinate systems
+   DESIGN (millimeters):  X = distance aft from the nose,  Y = toward the
+                          right wing tip,  Z = up.  The top edge of the
+                          fuselage is Z = 0; the wing and stabilizer sit there.
+   BODY   (meters):       x = forward, y = right, z = down
+   WORLD  (meters):       x = downrange, y = right of launch line, z = down
+
+   Method
+   - Wing, stabilizer, fin and fuselage are cut into thin streamwise strips.
+     Each strip computes its own lift and drag, including flow from rotation
+     (natural damping) and sideslip (dihedral and fin effects).
+   - Folded-airfoil wing strips use a cambered-airfoil model: the zero-lift
+     angle comes from the camber, which is estimated from the airfoil
+     thickness. Flat foam-board surfaces use a thin flat-plate model.
+   - Elevator and rudder use thin-airfoil flap theory.
+   - Mass comes from the foam board area actually used (sheet mass divided
+     by sheet area), plus hot glue, tape and ballast.
+   - Flight: 6-degree-of-freedom rigid body, RK4 integration, 1 ms step.
+   ===================================================================== */
+(function (root) {
+  'use strict';
+
+  var G = 9.80665;
+  var DEG = Math.PI / 180;
+  var OSWALD = 0.85;
+  var CN90 = 1.80;
+  var GLUE_G_PER_CM = 0.04;   // hot-glue bead about 2.5 mm wide
+  var WINGLET_SPAN_GAIN = 0.8; // effective wing-span gain per unit winglet height (estimate, see notes)
+  var CANARD_WASH_K = 0.5;     // downwash from the canard at the wing, as a fraction of the far-field value (estimate)
+
+    /* ---------------- small vector helpers ---------------- */
+  function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function mul(a, s) { return [a[0] * s, a[1] * s, a[2] * s]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b) {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  }
+  function len(a) { return Math.sqrt(dot(a, a)); }
+  function norm(a) { var l = len(a); return l > 1e-12 ? mul(a, 1 / l) : [0, 0, 0]; }
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+  /* design millimeters -> body meters */
+  function d2b(p) { return [-p[0] / 1000, p[1] / 1000, -p[2] / 1000]; }
+  /* design direction -> body direction (no scaling) */
+  function dir2b(v) { return [-v[0], v[1], -v[2]]; }
+
+  /* quaternion [w,x,y,z], body -> world */
+  function qmul(a, b) {
+    return [
+      a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+      a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+      a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+      a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]
+    ];
+  }
+  function qnorm(q) {
+    var l = Math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+    return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
+  }
+  function qrot(q, v) { // rotate body vector into world
+    var w = q[0], x = q[1], y = q[2], z = q[3];
+    var tx = 2 * (y * v[2] - z * v[1]);
+    var ty = 2 * (z * v[0] - x * v[2]);
+    var tz = 2 * (x * v[1] - y * v[0]);
+    return [
+      v[0] + w * tx + (y * tz - z * ty),
+      v[1] + w * ty + (z * tx - x * tz),
+      v[2] + w * tz + (x * ty - y * tx)
+    ];
+  }
+  function qinvrot(q, v) { return qrot([q[0], -q[1], -q[2], -q[3]], v); }
+  function qfromEuler(roll, pitch, yaw) {
+    var cr = Math.cos(roll / 2), sr = Math.sin(roll / 2);
+    var cp = Math.cos(pitch / 2), sp = Math.sin(pitch / 2);
+    var cy = Math.cos(yaw / 2), sy = Math.sin(yaw / 2);
+    return [
+      cr * cp * cy + sr * sp * sy,
+      sr * cp * cy - cr * sp * sy,
+      cr * sp * cy + sr * cp * sy,
+      cr * cp * sy - sr * sp * cy
+    ];
+  }
+  function qtoEuler(q) {
+    var w = q[0], x = q[1], y = q[2], z = q[3];
+    var roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+    var pitch = Math.asin(clamp(2 * (w * y - z * x), -1, 1));
+    var yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+    return [roll, pitch, yaw];
+  }
+
+  /* 3x3 helpers for the inertia tensor */
+  function m3inv(m) {
+    var a = m[0][0], b = m[0][1], c = m[0][2], d = m[1][0], e = m[1][1], f = m[1][2], g = m[2][0], h = m[2][1], i = m[2][2];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g;
+    var det = a * A + b * B + c * C;
+    if (Math.abs(det) < 1e-30) det = 1e-30;
+    return [
+      [A / det, -(b * i - c * h) / det, (b * f - c * e) / det],
+      [B / det, (a * i - c * g) / det, -(a * f - c * d) / det],
+      [C / det, -(a * h - b * g) / det, (a * e - b * d) / det]
+    ];
+  }
+  function m3v(m, v) {
+    return [m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+            m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+            m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]];
+  }
+
+
+
+  function airDensity(tempC, elevM) {
+    var p = 101325 * Math.pow(1 - 2.25577e-5 * clamp(elevM, -400, 8000), 5.25588);
+    return p / (287.05 * (tempC + 273.15));
+  }
+  function airViscosity(tempC) { // Sutherland, Pa·s
+    var T = tempC + 273.15;
+    return 1.716e-5 * Math.pow(T / 273.15, 1.5) * (273.15 + 110.4) / (T + 110.4);
+  }
+
+  /* ---------------- example design ---------------- */
+  function exampleGlider() {
+    return {
+      format: 'foam-glider-design', version: 1,
+      name: 'Foam Glider One', designer: '', notes: '',
+      board: { w: 508, h: 762, thickness: 4.8, sheetMass: 115 },
+      fuselage: { length: 660, height: 50, tailHeight: 22, noseSlope: 70, layers: 2 },
+      wing: { x: 140, rootChord: 170, tipChord: 130, semiSpan: 360, sweep: 20, dihedral: 5, incidence: 2, airfoil: 'folded', thickness: 16 },
+      hstab: { x: 560, rootChord: 95, tipChord: 70, semiSpan: 140, sweep: 15, incidence: 0, elevChord: 25, elevUp: 0 },
+      vstab: { x: 575, rootChord: 85, tipChord: 50, height: 100, sweep: 35, rudderChord: 25, rudderRight: 0 },
+      canard: { enabled: false, x: 45, rootChord: 55, tipChord: 40, semiSpan: 90, sweep: 8, incidence: 4 },
+      winglets: { enabled: false, height: 45, rootChord: 50, tipChord: 30, sweep: 15, cant: 0 },
+      ballast: [{ name: 'US nickel', mass: 5.0, count: 8, x: 25 }],
+      glue: { mode: 'auto', mass: 15 },
+      tape: { length: 50, gPerM: 3.5, x: 150 },
+      launch: { speed: 6, angle: 0, height: 1.8, headwind: 0, temperature: 15, elevation: 100 },
+      tests: []
+    };
+  }
+  function sanitize(d) {
+    var base = exampleGlider();
+    function fill(t, s) {
+      for (var k in s) {
+        if (!Object.prototype.hasOwnProperty.call(s, k)) continue;
+        if (Array.isArray(s[k])) { if (!Array.isArray(t[k])) t[k] = JSON.parse(JSON.stringify(s[k])); continue; }
+        if (t[k] === undefined || t[k] === null) t[k] = JSON.parse(JSON.stringify(s[k]));
+        else if (typeof s[k] === 'object') fill(t[k], s[k]);
+      }
+    }
+    fill(d, base);
+    d.ballast = d.ballast.filter(function (b) { return b && isFinite(b.mass); }).map(function (b) {
+      return { name: String(b.name || 'Ballast'), mass: +b.mass || 0, count: Math.max(0, Math.round(+b.count || 0)), x: +b.x || 0 };
+    });
+    if (!Array.isArray(d.tests)) d.tests = [];
+    d.canard.enabled = !!d.canard.enabled;
+    d.winglets.enabled = !!d.winglets.enabled;
+    return d;
+  }
+
+  /* ---------------- aerodynamic helpers ---------------- */
+  function liftSlope(AR) { AR = Math.max(AR, 0.2); return 2 * Math.PI * AR / (2 + Math.sqrt(AR * AR + 4)); }
+  function lowArBonus(AR) { return 14 * clamp((3 - AR) / 2.5, 0, 1); }
+  function flapTheory(cfRatio) {
+    cfRatio = clamp(cfRatio, 0.02, 0.9);
+    var th = Math.acos(2 * cfRatio - 1);
+    return { tau: (Math.PI - th + Math.sin(th)) / Math.PI, cm: -0.5 * Math.sin(th) * (1 - Math.cos(th)) };
+  }
+  function flatPlate(AR) { return { slope: liftSlope(AR), stall: (9 + lowArBonus(AR)) * DEG, alpha0: 0, cd0: 0.034, AR: AR }; }
+  function foldedAirfoil(AR, tc) {
+    tc = clamp(tc, 0.03, 0.20);
+    var camber = Math.min(0.35 * tc, 0.06);
+    // thin-airfoil theory for a cambered section: zero-lift angle -2·camber, Cm(1/4 chord) = -π·camber,
+    // pitching moment reduced for finite aspect ratio
+    return { slope: liftSlope(AR), stall: (14 + lowArBonus(AR)) * DEG, alpha0: -1.8 * camber, cd0: 0.024, AR: AR, camber: camber,
+             cm0: -Math.PI * camber * AR / (AR + 2) };
+  }
+
+  /* chord direction (forward) and surface normal for a surface with a given
+     span direction and incidence, in design coordinates */
+  function frame(spanDirD, incDeg, sg) {
+    var i = incDeg * DEG;
+    var cD = [-Math.cos(i), 0, Math.sin(i)];
+    var nD = mul(cross(spanDirD, cD), sg);
+    return { c: dir2b(cD), n: dir2b(norm(nD)) };
+  }
+
+  /* fuselage depth below the top edge at distance X from the nose */
+  function fuseDepth(d, X) {
+    var f = d.fuselage, H = f.height, L = f.length;
+    var wTE = clamp(d.wing.x + d.wing.rootChord, 1, L - 1);
+    var ns = clamp(f.noseSlope, 0, wTE * 0.9);
+    if (X <= 0) return H * 0.4;
+    if (X < ns) return H * (0.4 + 0.6 * X / ns);
+    if (X <= wTE) return H;
+    if (X >= L) return f.tailHeight;
+    return H + (f.tailHeight - H) * (X - wTE) / (L - wTE);
+  }
+  /* top edge of the fuselage: the wing seat and stabilizer seat are cut at
+     their incidence angles (front edge raised for positive incidence) */
+  function seatRise(chord, incDeg) { return chord * Math.tan(incDeg * DEG); }
+  function fuseOutline(d) {
+    var f = d.fuselage, L = f.length, w = d.wing, hs = d.hstab;
+    var wTE = clamp(w.x + w.rootChord, 1, L - 1);
+    var ns = clamp(f.noseSlope, 0, wTE * 0.9);
+    var wr = seatRise(w.rootChord, w.incidence), hr = seatRise(hs.rootChord, hs.incidence);
+    var top = [[0, 0]];
+    var cn = d.canard;
+    if (cn && cn.enabled && cn.x + cn.rootChord <= w.x - 0.5) {
+      if (cn.x > 0.5) top.push([cn.x, seatRise(cn.rootChord, cn.incidence)]);
+      top.push([cn.x + cn.rootChord, 0]);
+    }
+    if (w.x > 0.5) top.push([w.x, wr]);
+    top.push([w.x + w.rootChord, 0]);
+    if (hs.x > w.x + w.rootChord + 0.5 && hs.x + hs.rootChord <= L + 0.5) { top.push([hs.x, hr]); top.push([Math.min(L, hs.x + hs.rootChord), 0]); }
+    top.push([L, 0]);
+    var pts = top.concat([[L, -f.tailHeight], [wTE, -f.height]]);
+    if (ns > 0) pts.push([ns, -f.height]);
+    pts.push([0, -f.height * (ns > 0 ? 0.4 : 1)]);
+    // remove duplicate points
+    return pts.filter(function (q, i) { return i === 0 || Math.abs(q[0] - pts[i - 1][0]) + Math.abs(q[1] - pts[i - 1][1]) > 0.01; }); // [X, Z]
+  }
+
+  /* =====================================================================
+     GEOMETRY: strips (physics), outlines (drawing), mass items
+     ===================================================================== */
+  function buildGeometry(d) {
+    var w = d.wing, f = d.fuselage, hs = d.hstab, vs = d.vstab, bd = d.board;
+    var rhoA = bd.sheetMass / (bd.w * bd.h);          // grams per mm²
+    var t = bd.thickness;
+    var strips = [], masses = [], lines = [], glue = [];
+    var parts = { wing: 0, spar: 0, fuselage: 0, hstab: 0, vstab: 0, canard: 0, winglets: 0 };
+
+    /* ---- wing ---- */
+    var bs = Math.max(w.semiSpan, 10), G1 = w.dihedral * DEG;
+    var lam = w.tipChord / Math.max(w.rootChord, 1);
+    var S = (w.rootChord + w.tipChord) * bs;          // mm², both halves
+    var AR = (2 * bs) * (2 * bs) / S;
+    var mac = (2 / 3) * w.rootChord * (1 + lam + lam * lam) / (1 + lam);
+    // optional winglets act as end plates: they raise the effective aspect ratio of the wing.
+    // Effective span increase = WINGLET_SPAN_GAIN x winglet height x cos(cant). This is an estimate (see notes).
+    var wl = d.winglets, wlOn = !!(wl && wl.enabled);
+    var wlH = wlOn ? Math.max(wl.height, 3) : 0, wlCant = wlOn ? clamp(wl.cant, 0, 60) * DEG : 0;
+    var wlRoot = wlOn ? clamp(Math.min(wl.rootChord, w.tipChord), 5, 400) : 0;
+    var wlTip = wlOn ? clamp(Math.min(wl.tipChord, wlRoot * 1.5), 3, 400) : 0;
+    var ARw = AR;
+    if (wlOn) { var bFull = 2 * bs * Math.cos(w.dihedral * DEG); ARw = AR * Math.pow((bFull + WINGLET_SPAN_GAIN * wlH * Math.cos(wlCant)) / bFull, 2); }
+    var macSpan = bs * (1 + 2 * lam) / (3 * (1 + lam));
+    var macLE = w.x + w.sweep * macSpan / bs;
+    var folded = w.airfoil === 'folded';
+    var T = folded ? Math.max(w.thickness, 2 * t + 1) : t;
+    var sparH = folded ? Math.max(T - 2 * t, 0) : 0;
+    var wrap = folded ? 1.2 * T : 0;
+    var NW = 10;
+    [1, -1].forEach(function (sg) {
+      var spanD = [0, sg * Math.cos(G1), Math.sin(G1)];
+      var fr = frame(spanD, w.incidence, sg);
+      for (var i = 0; i < NW; i++) {
+        var s = (i + 0.5) / NW * bs, ds = bs / NW;
+        var c = w.rootChord + (w.tipChord - w.rootChord) * s / bs;
+        var le = w.x + w.sweep * s / bs;
+        var P = [le, sg * s * Math.cos(G1), s * Math.sin(G1)];
+        var ap = folded ? foldedAirfoil(ARw, T / c) : flatPlate(ARw);
+        strips.push({ part: 'wing', le: d2b(P), chord: c / 1000, area: c * ds * 1e-6, n: fr.n, c: fr.c,
+          slope: ap.slope, stall: ap.stall, alpha0: ap.alpha0, cd0: ap.cd0, cm0: ap.cm0 || 0, AR: ARw, flap: null });
+        var blank = folded ? (c + wrap + 1.02 * c) : c;
+        var m = blank * ds * rhoA;
+        masses.push({ m: m / 1000, p: [le + c * (folded ? 0.45 : 0.5), P[1], P[2] + (folded ? T * 0.4 : 0)], c: c, part: 'wing' });
+        parts.wing += m;
+        if (folded && sparH > 0) {
+          var ms = sparH * ds * rhoA;
+          masses.push({ m: ms / 1000, p: [le + 0.3 * c, P[1], P[2] + T / 2], c: 0, part: 'spar' });
+          parts.spar += ms;
+        }
+      }
+      var tipY = sg * bs * Math.cos(G1), tipZ = bs * Math.sin(G1);
+      lines.push({ pts: [[w.x, 0, 0], [w.x + w.sweep, tipY, tipZ], [w.x + w.sweep + w.tipChord, tipY, tipZ], [w.x + w.rootChord, 0, 0]], kind: 'wing', closed: true });
+    });
+    // airfoil section at the root (seen in the side view)
+    var sec = [];
+    for (var k = 0; k <= 16; k++) {
+      var xc = k / 16, yt = folded ? T * 1.0 * Math.sqrt(Math.max(0, xc)) * (1 - xc) * 2.6 / (1 + 1.6 * xc) : t;
+      sec.push([w.x + xc * w.rootChord, 0, Math.max(t, Math.min(T, yt))]);
+    }
+    sec.push([w.x + w.rootChord, 0, 0]); sec.push([w.x, 0, 0]);
+    lines.push({ pts: sec, kind: 'wing', closed: true, sideOnly: true });
+    // glue: wing to fuselage, folded-wing seams, center joint
+    glue.push({ len: 2 * w.rootChord, p: [w.x + w.rootChord / 2, 0, 0] });
+    if (folded) {
+      glue.push({ len: 2 * 2 * bs, p: [macLE + 0.3 * mac, 0, T / 2] });
+      glue.push({ len: 2 * bs, p: [macLE + mac, 0, 0] });
+    }
+    if (Math.abs(w.dihedral) > 0.1) glue.push({ len: w.rootChord * (folded ? 2 : 1), p: [w.x + w.rootChord / 2, 0, 0] });
+
+    /* ---- fuselage (profile, laminated layers) ---- */
+    var L = Math.max(f.length, 50), layers = Math.max(1, Math.round(f.layers));
+    var NF = 8, fuseArea = 0;
+    var fuseAR = 2 * f.height * f.height / Math.max(L * f.height * 0.8, 1);
+    var fp = flatPlate(fuseAR);
+    for (var j = 0; j < NF; j++) {
+      // vertical strips: slice the side profile into horizontal bands (streamwise strips)
+      var z = (j + 0.5) / NF * f.height, dz = f.height / NF;
+      // find the X range where the fuselage is deeper than z
+      var x0 = null, x1 = null, step = L / 120;
+      for (var X = 0; X <= L + 1e-6; X += step) { if (fuseDepth(d, X) >= z) { if (x0 === null) x0 = X; x1 = X; } }
+      if (x0 === null || x1 - x0 < 1) continue;
+      var cf = x1 - x0, a = cf * dz;
+      fuseArea += a;
+      strips.push({ part: 'fuselage', le: d2b([x0, 0, -z]), chord: cf / 1000, area: a * 1e-6, n: [0, 1, 0], c: [1, 0, 0],
+        slope: fp.slope, stall: fp.stall, alpha0: 0, cd0: 0.030, AR: fuseAR, flap: null });
+      var mf = a * layers * rhoA;
+      masses.push({ m: mf / 1000, p: [x0 + cf / 2, 0, -z], c: cf, part: 'fuselage' });
+      parts.fuselage += mf;
+    }
+    lines.push({ pts: fuseOutline(d).map(function (q) { return [q[0], 0, q[1]]; }), kind: 'fuselage', closed: true });
+    // blunt front face of the fuselage and the wing leading edge
+    var bluff = [
+      { p: [0, 0, -fuseDepth(d, 0) / 2], area: layers * t * fuseDepth(d, 0) * 1e-6, cd: 1.0 }
+    ];
+    if (layers > 1) glue.push({ len: (layers - 1) * 3 * L, p: [L * 0.45, 0, -f.height * 0.5] });
+
+    /* ---- horizontal stabilizer with elevator ---- */
+    var hbs = Math.max(hs.semiSpan, 5);
+    var Sh = (hs.rootChord + hs.tipChord) * hbs;
+    var ARh = (2 * hbs) * (2 * hbs) / Sh;
+    var NH = 6, gap = t + 3;
+    var hp = flatPlate(ARh);
+    var hlam = hs.tipChord / Math.max(hs.rootChord, 1);
+    var hmac = (2 / 3) * hs.rootChord * (1 + hlam + hlam * hlam) / (1 + hlam);
+    var hmacLE = hs.x + hs.sweep * (hbs * (1 + 2 * hlam) / (3 * (1 + hlam))) / hbs;
+    [1, -1].forEach(function (sg) {
+      var fr = frame([0, sg, 0], hs.incidence, sg);
+      for (var i = 0; i < NH; i++) {
+        var s = (i + 0.5) / NH * hbs, ds = hbs / NH;
+        var c = hs.rootChord + (hs.tipChord - hs.rootChord) * s / hbs;
+        var le = hs.x + hs.sweep * s / hbs;
+        var st = { part: 'hstab', le: d2b([le, sg * s, 0]), chord: c / 1000, area: c * ds * 1e-6, n: fr.n, c: fr.c,
+          slope: hp.slope, stall: hp.stall, alpha0: 0, cd0: hp.cd0, AR: ARh, flap: null, downwash: true };
+        if (hs.elevChord > 0 && s > gap) {
+          var ft = flapTheory(clamp(hs.elevChord, 1, 0.6 * c) / c);
+          st.flap = { tau: ft.tau, cm: ft.cm, delta: -hs.elevUp * DEG };
+        }
+        strips.push(st);
+        var m = c * ds * rhoA;
+        masses.push({ m: m / 1000, p: [le + c / 2, sg * s, 0], c: c, part: 'hstab' });
+        parts.hstab += m;
+      }
+      lines.push({ pts: [[hs.x, 0, 0], [hs.x + hs.sweep, sg * hbs, 0], [hs.x + hs.sweep + hs.tipChord, sg * hbs, 0], [hs.x + hs.rootChord, 0, 0]], kind: 'hstab', closed: true });
+      if (hs.elevChord > 0) {
+        var cg0 = hs.rootChord + (hs.tipChord - hs.rootChord) * gap / hbs;
+        var te0 = hs.x + hs.sweep * gap / hbs + cg0, te1 = hs.x + hs.sweep + hs.tipChord;
+        lines.push({ pts: [[te0 - clamp(hs.elevChord, 1, 0.6 * cg0), sg * gap, 0], [te1 - clamp(hs.elevChord, 1, 0.6 * hs.tipChord), sg * hbs, 0]], kind: 'elevator' });
+      }
+    });
+    glue.push({ len: 2 * hs.rootChord, p: [hs.x + hs.rootChord / 2, 0, 0] });
+
+    /* ---- vertical stabilizer (fin) with rudder ---- */
+    var vh = Math.max(vs.height, 5);
+    var Sv = (vs.rootChord + vs.tipChord) / 2 * vh;
+    var ARv = 2 * vh * vh / Sv;                        // stabilizer acts as an end plate
+    var NV = 5, vp = flatPlate(ARv);
+    for (var i2 = 0; i2 < NV; i2++) {
+      var zz = (i2 + 0.5) / NV * vh, dzz = vh / NV;
+      var cv = vs.rootChord + (vs.tipChord - vs.rootChord) * zz / vh;
+      var lev = vs.x + vs.sweep * zz / vh;
+      var stv = { part: 'vstab', le: d2b([lev, 0, zz]), chord: cv / 1000, area: cv * dzz * 1e-6, n: [0, 1, 0], c: [1, 0, 0],
+        slope: vp.slope, stall: vp.stall, alpha0: 0, cd0: vp.cd0, AR: ARv, flap: null };
+      if (vs.rudderChord > 0) {
+        var ftv = flapTheory(clamp(vs.rudderChord, 1, 0.6 * cv) / cv);
+        stv.flap = { tau: ftv.tau, cm: ftv.cm, delta: -vs.rudderRight * DEG };  // trailing edge right = negative
+      }
+      strips.push(stv);
+      var mv = cv * dzz * rhoA;
+      masses.push({ m: mv / 1000, p: [lev + cv / 2, 0, zz], c: cv, part: 'vstab' });
+      parts.vstab += mv;
+    }
+    lines.push({ pts: [[vs.x, 0, 0], [vs.x + vs.sweep, 0, vh], [vs.x + vs.sweep + vs.tipChord, 0, vh], [vs.x + vs.rootChord, 0, 0]], kind: 'vstab', closed: true });
+    if (vs.rudderChord > 0) lines.push({ pts: [[vs.x + vs.rootChord - clamp(vs.rudderChord, 1, 0.6 * vs.rootChord), 0, 0], [vs.x + vs.sweep + vs.tipChord - clamp(vs.rudderChord, 1, 0.6 * vs.tipChord), 0, vh]], kind: 'rudder' });
+    glue.push({ len: 2 * vs.rootChord, p: [vs.x + vs.rootChord / 2, 0, 0] });
+
+
+    /* ---- optional canard (small forward wing) ---- */
+    var cd = d.canard, cdOn = !!(cd && cd.enabled), canardInfo = null;
+    if (cdOn) {
+      var cbs = Math.max(cd.semiSpan, 5), Sc = (cd.rootChord + cd.tipChord) * cbs;
+      var ARc = (2 * cbs) * (2 * cbs) / Sc, NC = 6, cp = flatPlate(ARc);
+      var clam = cd.tipChord / Math.max(cd.rootChord, 1);
+      var cmac = (2 / 3) * cd.rootChord * (1 + clam + clam * clam) / (1 + clam);
+      var cmacLE = cd.x + cd.sweep * (cbs * (1 + 2 * clam) / (3 * (1 + clam))) / cbs;
+      [1, -1].forEach(function (sg) {
+        var fr = frame([0, sg, 0], cd.incidence, sg);
+        for (var i = 0; i < NC; i++) {
+          var s = (i + 0.5) / NC * cbs, ds = cbs / NC;
+          var c = cd.rootChord + (cd.tipChord - cd.rootChord) * s / cbs;
+          var le = cd.x + cd.sweep * s / cbs;
+          strips.push({ part: 'canard', le: d2b([le, sg * s, 0]), chord: c / 1000, area: c * ds * 1e-6, n: fr.n, c: fr.c,
+            slope: cp.slope, stall: cp.stall, alpha0: 0, cd0: cp.cd0, AR: ARc, flap: null });
+          var m = c * ds * rhoA;
+          masses.push({ m: m / 1000, p: [le + c / 2, sg * s, 0], c: c, part: 'canard' });
+          parts.canard += m;
+        }
+        lines.push({ pts: [[cd.x, 0, 0], [cd.x + cd.sweep, sg * cbs, 0], [cd.x + cd.sweep + cd.tipChord, sg * cbs, 0], [cd.x + cd.rootChord, 0, 0]], kind: 'canard', closed: true });
+      });
+      glue.push({ len: 2 * cd.rootChord, p: [cd.x + cd.rootChord / 2, 0, 0] });
+      // the canard's downwash reduces the angle of attack of the wing behind it (only the part of the wing inside the canard span)
+      strips.forEach(function (st) { if (st.part === 'wing' && Math.abs(st.le[1]) * 1000 <= cbs) st.canardWash = true; });
+      canardInfo = { Sc: Sc, AR: ARc, mac: cmac, macLE: cmacLE, semiSpan: cbs,
+        dw: { deps: CANARD_WASH_K * 2 * cp.slope / (Math.PI * ARc), inc: cd.incidence * DEG, a0: 0 } };
+    }
+
+    /* ---- optional winglets (vertical or canted surfaces at the wing tips) ---- */
+    var wingletInfo = null;
+    if (wlOn) {
+      var NWL = 4, wlS = (wlRoot + wlTip) / 2 * wlH, ARwl = 2 * wlH * wlH / Math.max(wlS, 1), wp = flatPlate(ARwl);
+      var cosC = Math.cos(wlCant), sinC = Math.sin(wlCant);
+      [1, -1].forEach(function (sg) {
+        var tipY = sg * bs * Math.cos(G1), tipZ = bs * Math.sin(G1);
+        var x0 = w.x + w.sweep + w.tipChord - wlRoot;       // trailing edges line up with the wing tip
+        var nB = [0, cosC, -sg * sinC];                       // body-frame normal (y right, z down)
+        for (var i = 0; i < NWL; i++) {
+          var h = (i + 0.5) / NWL * wlH, dh = wlH / NWL, f2 = h / wlH;
+          var c = wlRoot + (wlTip - wlRoot) * f2, le = x0 + wl.sweep * f2;
+          var area = c * dh / cosC;                           // slanted height
+          var P = [le, tipY + sg * h * sinC, tipZ + h * cosC];
+          strips.push({ part: 'winglets', le: d2b(P), chord: c / 1000, area: area * 1e-6, n: nB, c: [1, 0, 0],
+            slope: wp.slope, stall: wp.stall, alpha0: 0, cd0: wp.cd0, AR: ARwl, flap: null });
+          var m = area * rhoA;
+          masses.push({ m: m / 1000, p: [le + c / 2, P[1], P[2]], c: c, part: 'winglets' });
+          parts.winglets += m;
+        }
+        lines.push({ pts: [[x0, tipY, tipZ], [x0 + wl.sweep, tipY + sg * wlH * sinC, tipZ + wlH * cosC], [x0 + wl.sweep + wlTip, tipY + sg * wlH * sinC, tipZ + wlH * cosC], [x0 + wlRoot, tipY, tipZ]], kind: 'winglet', closed: true });
+        glue.push({ len: wlRoot, p: [x0 + wlRoot / 2, tipY, tipZ] });
+      });
+      wingletInfo = { height: wlH, rootChord: wlRoot, tipChord: wlTip, area: wlS * 2, ARw: ARw, spanGain: WINGLET_SPAN_GAIN * wlH * cosC, clamped: wl.rootChord > w.tipChord + 0.01 };
+    }
+
+    /* ---- hot glue ---- */
+    var glueLen = 0; glue.forEach(function (g) { glueLen += g.len; });
+    var glueAuto = glueLen / 10 * GLUE_G_PER_CM;
+    var glueMass = d.glue.mode === 'measured' ? Math.max(0, d.glue.mass) : glueAuto;
+    glue.forEach(function (g) { masses.push({ m: glueMass * (g.len / Math.max(glueLen, 1)) / 1000, p: g.p, c: 0, part: 'glue' }); });
+
+    /* ---- tape ---- */
+    var tapeMass = Math.max(0, d.tape.length) / 100 * Math.max(0, d.tape.gPerM);
+    if (tapeMass > 0) masses.push({ m: tapeMass / 1000, p: [clamp(d.tape.x, 0, L), 0, 0], c: 0, part: 'tape' });
+
+    /* ---- ballast ---- */
+    var ballastMass = 0, ballastPts = [];
+    d.ballast.forEach(function (b) {
+      var m = Math.max(0, b.mass) * Math.max(0, b.count);
+      if (m <= 0) return;
+      var bx = clamp(b.x, 0, L);
+      var p = [bx, 0, -fuseDepth(d, bx) * 0.5];
+      masses.push({ m: m / 1000, p: p, c: 0, part: 'ballast' });
+      ballastMass += m;
+      ballastPts.push({ p: p, name: b.name, count: b.count, mass: m });
+    });
+
+    // wing downwash at the tail: eps = k * 2 * CLw / (pi * AR), with k ~ 0.75 for a tail
+    // about 2-3 chords behind the wing (the far-field value is k = 1)
+    var wingStrip = strips[0];
+    var dw = { deps: 0.75 * 2 * wingStrip.slope / (Math.PI * ARw), inc: w.incidence * DEG, a0: wingStrip.alpha0 };
+    return {
+      downwash: dw, canardDw: canardInfo ? canardInfo.dw : null, canard: canardInfo, winglets: wingletInfo,
+      strips: strips, masses: masses, lines: lines, bluff: bluff,
+      parts: parts, glueAuto: glueAuto, glueMass: glueMass, glueLen: glueLen, tapeMass: tapeMass,
+      ballastMass: ballastMass, ballastPts: ballastPts,
+      wingArea: S, wingAR: AR, mac: mac, macLE: macLE, span: 2 * bs * Math.cos(G1),
+      Sh: Sh, hmac: hmac, hmacLE: hmacLE, Sv: Sv, vh: vh, T: T, sparH: sparH, wrap: wrap, folded: folded,
+      rhoA: rhoA
+    };
+  }
+
+  function massProps(geo) {
+    var m = 0, cg = [0, 0, 0];
+    geo.masses.forEach(function (it) { m += it.m; cg = add(cg, mul(it.p, it.m)); });
+    cg = mul(cg, 1 / Math.max(m, 1e-9));
+    var cgB = d2b(cg);
+    var I = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    geo.masses.forEach(function (it) {
+      var r = sub(d2b(it.p), cgB), r2 = dot(r, r);
+      for (var a = 0; a < 3; a++) for (var b = 0; b < 3; b++) I[a][b] += it.m * ((a === b ? r2 : 0) - r[a] * r[b]);
+      var self = it.m * Math.pow(it.c / 1000, 2) / 12;
+      I[1][1] += self; I[2][2] += self;
+    });
+    for (var a = 0; a < 3; a++) I[a][a] = Math.max(I[a][a], 1e-8);
+    return { mass: m, cg: cg, cgB: cgB, I: I, Iinv: m3inv(I) };
+  }
+
+  /* =====================================================================
+     AERODYNAMIC FORCES (body frame, about the CG)
+     ===================================================================== */
+  function aeroForces(geo, cgB, vB, w, rho) {
+    var strips = geo.strips, F = [0, 0, 0], M = [0, 0, 0];
+    var eps = 0;
+    if (geo.downwash && vB[0] > 0.1) {
+      var aBody = Math.atan2(vB[2], vB[0]);
+      eps = clamp(geo.downwash.deps * (aBody + geo.downwash.inc - geo.downwash.a0), -12 * DEG, 12 * DEG);
+    }
+    var epsC = 0;
+    if (geo.canardDw && vB[0] > 0.1) {
+      var aBodyC = Math.atan2(vB[2], vB[0]);
+      epsC = clamp(geo.canardDw.deps * (aBodyC + geo.canardDw.inc - geo.canardDw.a0), -12 * DEG, 12 * DEG);
+    }
+    for (var i = 0; i < strips.length; i++) {
+      var s = strips[i];
+      var r = sub(s.le, cgB);
+      var vp = add(vB, cross(w, sub(r, mul(s.c, s.chord * 0.25))));
+      var vn = dot(vp, s.n), vc = dot(vp, s.c);
+      var vEff2 = vn * vn + vc * vc, vTot = len(vp);
+      if (vTot < 1e-6) continue;
+      var alpha = Math.atan2(-vn, vc);
+      var delta = s.flap ? s.flap.delta : 0;
+      if (s.downwash) alpha -= eps;
+      if (s.canardWash) alpha -= epsC;
+      var aEff = alpha - s.alpha0 + (s.flap ? s.flap.tau * delta : 0);
+      var att = 1 / (1 + Math.exp((Math.abs(aEff) - s.stall - 1 * DEG) / (1.2 * DEG)));
+      if (vc < 0) att = 0;
+      var clAtt = s.slope * aEff;
+      var cn = CN90 * Math.sin(alpha);
+      var CL = att * clAtt + (1 - att) * cn * Math.cos(alpha);
+      var CDi = att * clAtt * clAtt / (Math.PI * OSWALD * Math.max(s.AR, 0.3)) + (1 - att) * cn * Math.sin(alpha);
+      var q = 0.5 * rho * vEff2, qTot = 0.5 * rho * vTot * vTot, vEff = Math.sqrt(vEff2);
+      var fo = [0, 0, 0];
+      if (vEff > 1e-6) {
+        var vhat = mul(add(mul(s.c, vc), mul(s.n, vn)), 1 / vEff);
+        var lhat = norm(sub(s.n, mul(vhat, dot(s.n, vhat))));
+        fo = add(mul(lhat, q * s.area * CL), mul(vhat, -q * s.area * CDi));
+      }
+      fo = add(fo, mul(vp, -qTot * s.area * s.cd0 / vTot));
+      var frac = 0.25 + 0.25 * (1 - att);
+      var pt = sub(r, mul(s.c, s.chord * frac));
+      F = add(F, fo);
+      M = add(M, cross(pt, fo));
+      if ((s.flap && delta !== 0) || s.cm0) {
+        var pAxis = cross(s.c, s.n);
+        var cmTot = (s.cm0 || 0) + (s.flap ? s.flap.cm * delta * (s.slope / (2 * Math.PI)) : 0);
+        M = add(M, mul(pAxis, q * s.area * s.chord * cmTot * att));
+      }
+    }
+    var V = len(vB);
+    if (V > 1e-6) {
+      geo.bluff.forEach(function (b) {
+        var fb = mul(vB, -0.5 * rho * V * b.area * b.cd);
+        F = add(F, fb);
+        M = add(M, cross(sub(d2b(b.p), cgB), fb));
+      });
+    }
+    return { F: F, M: M };
+  }
+
+  /* =====================================================================
+     STATIC ANALYSIS
+     ===================================================================== */
+  function analyze(d) {
+    var geo = buildGeometry(d);
+    var mp = massProps(geo);
+    var rho = airDensity(d.launch.temperature, d.launch.elevation);
+    var V = 6;
+    function at(alpha, beta) {
+      var vB = [V * Math.cos(alpha) * Math.cos(beta), V * Math.sin(beta), V * Math.sin(alpha) * Math.cos(beta)];
+      var r = aeroForces(geo, mp.cgB, vB, [0, 0, 0], rho);
+      var vhat = norm(vB), up = norm(cross([0, 1, 0], vhat));
+      return { F: r.F, M: r.M, L: dot(r.F, up), D: -dot(r.F, vhat) };
+    }
+    var r1 = at(1 * DEG, 0), r2 = at(3 * DEG, 0);
+    var xNP = -(r2.M[1] - r1.M[1]) / (r2.F[2] - r1.F[2]);
+    var npX = mp.cg[0] - xNP * 1000;
+    var sm = (npX - mp.cg[0]) / geo.mac;
+
+    var trim = null, prev = null;
+    for (var aDeg = -10; aDeg <= 40; aDeg += 0.5) {
+      var rr = at(aDeg * DEG, 0);
+      if (prev && prev.M > 0 && rr.M[1] <= 0 && trim === null) {
+        var tt = prev.M / (prev.M - rr.M[1]);
+        var aT = prev.a + tt * 0.5, rt = at(aT * DEG, 0);
+        trim = { alpha: aT, L: rt.L, D: rt.D };
+      }
+      prev = { a: aDeg, M: rr.M[1] };
+    }
+    var W = mp.mass * G, trimSpeed = null, glideRatio = null, glideAngle = null, sinkRate = null;
+    if (trim && trim.L > 0) {
+      trimSpeed = V * Math.sqrt(W / trim.L);
+      glideRatio = trim.L / Math.max(trim.D, 1e-9);
+      glideAngle = Math.atan(1 / glideRatio) / DEG;
+      sinkRate = trimSpeed * Math.sin(glideAngle * DEG);
+    }
+    var aRef = (trim ? trim.alpha : 3) * DEG;
+    var b0 = at(aRef, 0), bP = at(aRef, 3 * DEG);
+    var qS = 0.5 * rho * V * V * geo.wingArea * 1e-6, span = geo.span / 1000;
+    var Clb = (bP.M[0] - b0.M[0]) / (qS * span * 3);
+    var Cnb = (bP.M[2] - b0.M[2]) / (qS * span * 3);
+    var yawTrim = b0.M[2] / (qS * span);
+
+    // classic glider design numbers
+    var wingAC = geo.macLE + 0.25 * geo.mac, hAC = geo.hmacLE + 0.25 * geo.hmac;
+    var vAC = d.vstab.x + d.vstab.sweep * 0.42 + 0.25 * (d.vstab.rootChord + d.vstab.tipChord) / 2;
+    var Vh = geo.Sh * (hAC - wingAC) / (geo.wingArea * geo.mac);
+    var Vv = geo.Sv * (vAC - wingAC) / (geo.wingArea * (2 * d.wing.semiSpan));
+    var wingLoading = mp.mass * 1000 / (geo.wingArea / 1e4);          // g per dm²
+    var Re = trimSpeed ? rho * trimSpeed * geo.mac / 1000 / airViscosity(d.launch.temperature) : null;
+
+    var layout = layoutParts(d, geo, mp.cg[0]);
+
+    var warnings = [];
+    if (sm < 0) warnings.push({ level: 'bad', text: 'Unstable: the center of gravity is behind the neutral point. Add ballast near the nose, move the wing back, or enlarge the stabilizer.' });
+    else if (sm < 0.05) warnings.push({ level: 'warn', text: 'Barely stable: the center of gravity is very close to the neutral point. Add a little nose ballast.' });
+    else if (sm > 0.35) warnings.push({ level: 'warn', text: 'Very nose-heavy: the glider will need a lot of up-elevator and will fly fast and steep.' });
+    if (!trim) warnings.push({ level: 'bad', text: 'No balanced flight angle: the glider cannot hold a steady glide. Adjust the elevator, the stabilizer incidence, or the ballast.' });
+    else if (trim.alpha - (geo.strips[0].alpha0 / DEG) > geo.strips[0].stall / DEG - 1) warnings.push({ level: 'warn', text: 'The balanced flight angle (' + trim.alpha.toFixed(1) + '°) is close to the wing stall angle. Reduce the up-elevator.' });
+    else if (trimSpeed && trimSpeed > 11) warnings.push({ level: 'warn', text: 'The steady glide speed (' + trimSpeed.toFixed(1) + ' m/s) is high for a hand launch. Reduce nose ballast or add a little up-elevator.' });
+    if (Vh < 0.30) warnings.push({ level: 'warn', text: 'Small horizontal tail volume (' + Vh.toFixed(2) + '). Enlarge the stabilizer or move it farther back. Typical gliders use 0.35–0.60.' });
+    if (Vv < 0.018) warnings.push({ level: 'warn', text: 'Small vertical tail volume (' + Vv.toFixed(3) + '). Enlarge the fin or move it back. Typical gliders use 0.02–0.04.' });
+    if (Clb > -0.0002) warnings.push({ level: 'warn', text: 'Weak roll stability: add dihedral (3–8° for a glider with a fin).' });
+    if (Cnb < 0.0002) warnings.push({ level: 'warn', text: 'Weak yaw stability: enlarge the fin or move it farther back.' });
+    if (geo.folded && d.wing.thickness < 2 * d.board.thickness + 1) warnings.push({ level: 'warn', text: 'The airfoil thickness must be more than two board thicknesses (' + (2 * d.board.thickness + 1).toFixed(1) + ' mm) so there is room for the spar.' });
+    if (d.hstab.x + d.hstab.rootChord > d.fuselage.length + 0.5) warnings.push({ level: 'warn', text: 'The stabilizer extends past the end of the fuselage. Lengthen the fuselage or move the stabilizer forward.' });
+    if (d.vstab.x + d.vstab.rootChord > d.fuselage.length + 0.5) warnings.push({ level: 'warn', text: 'The fin extends past the end of the fuselage. Lengthen the fuselage or move the fin forward.' });
+    if (d.wing.x + d.wing.rootChord > d.hstab.x) warnings.push({ level: 'warn', text: 'The wing overlaps the stabilizer. Move the stabilizer back or the wing forward.' });
+    if (d.canard.enabled) {
+      var cn = d.canard;
+      if (cn.x + cn.rootChord > d.wing.x + 0.5) warnings.push({ level: 'warn', text: 'The canard overlaps the wing. Move the canard forward, make its chord shorter, or move the wing back.' });
+      if (cn.incidence <= d.wing.incidence) warnings.push({ level: 'warn', text: 'Set the canard incidence 1–3° above the wing incidence (' + d.wing.incidence + '°). Then the canard stalls first, the nose drops, and the wing keeps flying.' });
+      if (cn.semiSpan >= 0.6 * d.wing.semiSpan) warnings.push({ level: 'warn', text: 'The canard span is more than 60 % of the wing span. A smaller canard (about 10–25 % of the wing area) is easier to balance.' });
+      warnings.push({ level: 'info', text: 'Canard area is ' + (100 * geo.canard.Sc / geo.wingArea).toFixed(0) + ' % of the wing area. A canard moves the neutral point forward, so check the static margin and add nose ballast if needed.' });
+    }
+    if (d.winglets.enabled) {
+      var wg = geo.winglets;
+      if (wg.clamped) warnings.push({ level: 'info', text: 'The winglet root chord is limited to the wing tip chord (' + d.wing.tipChord + ' mm).' });
+      if (d.winglets.height > 0.3 * d.wing.semiSpan) warnings.push({ level: 'warn', text: 'Tall winglets (more than 30 % of the half span) load the wing tips and may bend. Shorten them or add a spar.' });
+      warnings.push({ level: 'info', text: 'Winglets add about ' + wg.spanGain.toFixed(0) + ' mm of effective span and ' + (wg.area / 100).toFixed(1) + ' cm² of side area. Their effect is an estimate; compare it with test flights.' });
+    }
+    if (layout.unplaced.length) warnings.push({ level: 'bad', text: 'These parts are larger than one foam board sheet: ' + layout.unplaced.join(', ') + '.' });
+    if (layout.sheets.length > 1) warnings.push({ level: 'info', text: 'This design needs ' + layout.sheets.length + ' foam board sheets.' });
+    if (Math.abs(d.vstab.rudderRight) > 0.5) warnings.push({ level: 'info', text: 'The rudder is bent: the glider will turn to the ' + (d.vstab.rudderRight > 0 ? 'right.' : 'left.') });
+
+    return {
+      geo: geo, mp: mp, rho: rho, npX: npX, sm: sm, mac: geo.mac,
+      trim: trim, trimSpeed: trimSpeed, glideRatio: glideRatio, glideAngle: glideAngle, sinkRate: sinkRate,
+      Clb: Clb, Cnb: Cnb, yawTrim: yawTrim, Vh: Vh, Vv: Vv, wingLoading: wingLoading, Re: Re,
+      layout: layout, warnings: warnings
+    };
+  }
+
+  /* =====================================================================
+     PARTS FOR CUTTING. Each part is drawn in its own flat coordinates
+     (u to the right, v downward, millimeters), then packed onto sheets.
+     Line types: cut (solid), score (cut the foam, not the bottom paper),
+     fold, mark (pencil guide for gluing positions).
+     ===================================================================== */
+  function makeParts(d, geo, cgX) {
+    var w = d.wing, f = d.fuselage, hs = d.hstab, vs = d.vstab, t = d.board.thickness;
+    var parts = [];
+    function part(name, id, qty) { return { name: name, id: id, qty: qty || 1, outline: [], lines: [], labels: [] }; }
+
+    /* ---- wing ---- */
+    var bs = Math.max(w.semiSpan, 10), folded = geo.folded, T = geo.T, wrap = geo.wrap;
+    var split = Math.abs(w.dihedral) > 0.1 || 2 * bs > d.board.h - 12;
+    function le(s) { return w.sweep * Math.abs(s) / bs; }
+    function ch(s) { return w.rootChord + (w.tipChord - w.rootChord) * Math.abs(s) / bs; }
+    function topEdge(s) { return le(s) - wrap - 1.02 * ch(s); }
+    function wingPiece(s0, s1, name, id, qty) {
+      var p = part(name, id, qty);
+      var ss = [s0]; if (s0 < 0 && s1 > 0) ss.push(0); ss.push(s1);
+      var front = ss.map(function (s) { return [s, folded ? topEdge(s) : le(s)]; });
+      var back = ss.slice().reverse().map(function (s) { return [s, le(s) + ch(s)]; });
+      p.outline = front.concat(back);
+      if (folded) {
+        p.lines.push({ type: 'fold', pts: ss.map(function (s) { return [s, le(s)]; }), label: 'LEADING EDGE FOLD' });
+        p.lines.push({ type: 'fold', pts: ss.map(function (s) { return [s, le(s) - wrap]; }), label: 'LEADING EDGE FOLD' });
+        for (var k = 1; k <= 3; k++) {
+          p.lines.push({ type: 'light', pts: ss.map(function (s) { return [s, le(s) - wrap - 0.12 * k * ch(s)]; }), label: k === 2 ? 'LIGHT SCORE · top paper only' : '' });
+        }
+        p.lines.push({ type: 'mark', pts: ss.map(function (s) { return [s, le(s) + 0.3 * ch(s)]; }), label: 'SPAR POSITION' });
+      }
+      var sm = (s0 + s1) / 2;
+      p.labels.push({ u: sm, v: le(sm) + ch(sm) * 0.62, text: name.toUpperCase(), size: 7 });
+      if (folded) p.labels.push({ u: sm, v: topEdge(sm) + ch(sm) * 0.5, text: 'TOP SURFACE (folds over)', size: 4.5 });
+      if (s0 >= 0 || s1 <= 0) {
+        var rootS = s0 >= 0 ? s0 : s1;
+        p.labels.push({ u: rootS + (s0 >= 0 ? 6 : -6), v: le(rootS) + ch(rootS) * 0.35, text: 'ROOT', size: 3.5, rot: -90 });
+      }
+      return p;
+    }
+    if (split) {
+      parts.push(wingPiece(0, bs, 'Right wing', 'wingR'));
+      parts.push(wingPiece(-bs, 0, 'Left wing', 'wingL'));
+    } else {
+      parts.push(wingPiece(-bs, bs, 'Wing', 'wing'));
+    }
+    /* ---- spar ---- */
+    if (folded && geo.sparH > 0.5) {
+      var sp = part('Spar', 'spar', 2);
+      var sl = Math.sqrt(bs * bs + Math.pow(w.sweep + 0.3 * (w.tipChord - w.rootChord), 2));
+      sp.outline = [[0, 0], [sl, 0], [sl, geo.sparH], [0, geo.sparH]];
+      sp.labels.push({ u: sl / 2, v: geo.sparH / 2, text: 'SPAR × 2', size: Math.min(4, geo.sparH * 0.7) });
+      parts.push(sp);
+    }
+    /* ---- fuselage layers ---- */
+    var fp = part('Fuselage', 'fuse', Math.max(1, Math.round(f.layers)));
+    fp.outline = fuseOutline(d).map(function (q) { return [q[0], -q[1]]; });
+    var wr = seatRise(w.rootChord, w.incidence), hr = seatRise(hs.rootChord, hs.incidence);
+    fp.lines.push({ type: 'mark', pts: [[w.x, -wr + 2], [w.x + w.rootChord, 2]], label: 'WING' + (Math.abs(w.incidence) > 0.05 ? ' · seat cut at ' + w.incidence + '°' : '') });
+    fp.lines.push({ type: 'mark', pts: [[hs.x, -hr + 2], [hs.x + hs.rootChord, 2]], label: 'STABILIZER' + (Math.abs(hs.incidence) > 0.05 ? ' · seat cut at ' + hs.incidence + '°' : '') });
+    var fl = Math.max(1, Math.round(f.layers));
+    fp.labels.push({ u: f.length * 0.55, v: f.height * 0.5, text: 'FUSELAGE' + (fl > 1 ? ' × ' + fl : ''), size: 6 });
+    if (isFinite(cgX)) fp.lines.push({ type: 'balance', pts: [[cgX, 0], [cgX, Math.min(12, f.height * 0.4)]], label: 'BALANCE POINT' });
+    d.ballast.forEach(function (b) {
+      if (b.count * b.mass <= 0) return;
+      fp.lines.push({ type: 'mark', pts: [[b.x, fuseDepth(d, b.x) * 0.25], [b.x, fuseDepth(d, b.x) * 0.75]], label: 'BALLAST' });
+    });
+    parts.push(fp);
+    /* ---- stabilizer ---- */
+    var hbs = Math.max(hs.semiSpan, 5), gap = t + 3;
+    function hle(s) { return hs.sweep * Math.abs(s) / hbs; }
+    function hch(s) { return hs.rootChord + (hs.tipChord - hs.rootChord) * Math.abs(s) / hbs; }
+    var hp = part('Stabilizer', 'hstab');
+    hp.outline = [[-hbs, hle(-hbs)], [0, 0], [hbs, hle(hbs)], [hbs, hle(hbs) + hch(hbs)], [0, hch(0)], [-hbs, hle(-hbs) + hch(-hbs)]];
+    if (hs.elevChord > 0) {
+      [1, -1].forEach(function (sg) {
+        var ec0 = clamp(hs.elevChord, 1, 0.6 * hch(gap)), ec1 = clamp(hs.elevChord, 1, 0.6 * hch(hbs));
+        hp.lines.push({ type: 'score', pts: [[sg * gap, hle(gap) + hch(gap) - ec0], [sg * hbs, hle(hbs) + hch(hbs) - ec1]], label: sg > 0 ? 'SCORE · elevator hinge' : '' });
+        hp.lines.push({ type: 'cut', pts: [[sg * gap, hle(gap) + hch(gap)], [sg * gap, hle(gap) + hch(gap) - ec0]] });
+      });
+    }
+    hp.lines.push({ type: 'mark', pts: [[0, 0], [0, hch(0)]], label: 'CENTER' });
+    hp.labels.push({ u: hbs * 0.5, v: hle(hbs * 0.5) + hch(hbs * 0.5) * 0.35, text: 'STABILIZER', size: 5 });
+    parts.push(hp);
+    /* ---- canard ---- */
+    var cdn = d.canard;
+    if (cdn && cdn.enabled) {
+      var cbs2 = Math.max(cdn.semiSpan, 5);
+      var cle = function (s) { return cdn.sweep * Math.abs(s) / cbs2; };
+      var cch = function (s) { return cdn.rootChord + (cdn.tipChord - cdn.rootChord) * Math.abs(s) / cbs2; };
+      var cpp = part('Canard', 'canard');
+      cpp.outline = [[-cbs2, cle(-cbs2)], [0, 0], [cbs2, cle(cbs2)], [cbs2, cle(cbs2) + cch(cbs2)], [0, cch(0)], [-cbs2, cle(-cbs2) + cch(-cbs2)]];
+      cpp.lines.push({ type: 'mark', pts: [[0, 0], [0, cch(0)]], label: 'CENTER' });
+      cpp.labels.push({ u: cbs2 * 0.5, v: cle(cbs2 * 0.5) + cch(cbs2 * 0.5) * 0.4, text: 'CANARD', size: 4.5 });
+      parts.push(cpp);
+      fp.lines.push({ type: 'mark', pts: [[cdn.x, -seatRise(cdn.rootChord, cdn.incidence) + 2], [cdn.x + cdn.rootChord, 2]], label: 'CANARD' + (Math.abs(cdn.incidence) > 0.05 ? ' · seat cut at ' + cdn.incidence + '°' : '') });
+    }
+    /* ---- winglets ---- */
+    if (geo.winglets) {
+      var wi = geo.winglets, wsw = d.winglets.sweep;
+      var wpp = part('Winglet', 'winglet', 2);
+      wpp.outline = [[0, wi.height], [wsw, 0], [wsw + wi.tipChord, 0], [wi.rootChord, wi.height]];
+      wpp.labels.push({ u: (wi.rootChord + wsw) / 2, v: wi.height * 0.6, text: 'WINGLET × 2', size: Math.min(4, wi.rootChord / 9) });
+      wpp.labels.push({ u: wi.rootChord * 0.4, v: wi.height - 2.5, text: 'bottom edge (glued to wing tip)', size: 2.4 });
+      parts.push(wpp);
+    }
+    /* ---- fin ---- */
+    var vh = Math.max(vs.height, 5);
+    var vp = part('Fin', 'vstab');
+    vp.outline = [[0, vh], [vs.sweep, 0], [vs.sweep + vs.tipChord, 0], [vs.rootChord, vh]];
+    if (vs.rudderChord > 0) {
+      var rc0 = clamp(vs.rudderChord, 1, 0.6 * vs.rootChord), rc1 = clamp(vs.rudderChord, 1, 0.6 * vs.tipChord);
+      vp.lines.push({ type: 'score', pts: [[vs.rootChord - rc0, vh], [vs.sweep + vs.tipChord - rc1, 0]], label: 'SCORE · rudder hinge' });
+    }
+    vp.labels.push({ u: (vs.rootChord + vs.sweep) / 2, v: vh * 0.6, text: 'FIN', size: 5 });
+    vp.labels.push({ u: vs.rootChord * 0.4, v: vh - 3, text: 'bottom edge', size: 3 });
+    parts.push(vp);
+
+    // normalize every part so its bounding box starts at (0,0)
+    parts.forEach(function (p) {
+      var mnU = Infinity, mnV = Infinity, mxU = -Infinity, mxV = -Infinity;
+      p.outline.forEach(function (q) { mnU = Math.min(mnU, q[0]); mnV = Math.min(mnV, q[1]); mxU = Math.max(mxU, q[0]); mxV = Math.max(mxV, q[1]); });
+      function sh(q) { return [q[0] - mnU, q[1] - mnV]; }
+      p.outline = p.outline.map(sh);
+      p.lines.forEach(function (l) { l.pts = l.pts.map(sh); });
+      p.labels.forEach(function (l) { var q = sh([l.u, l.v]); l.u = q[0]; l.v = q[1]; });
+      p.w = mxU - mnU; p.h = mxV - mnV;
+      p.offset = [mnU, mnV];
+    });
+    return parts;
+  }
+
+  /* shelf packing onto foam board sheets (long side horizontal) */
+  function layoutParts(d, geo, cgX) {
+    var parts = makeParts(d, geo, cgX);
+    var SW = Math.max(d.board.w, d.board.h), SH = Math.min(d.board.w, d.board.h);
+    var margin = 6, gapP = 8;
+    var items = [];
+    parts.forEach(function (p) { for (var i = 0; i < p.qty; i++) items.push({ part: p, copy: i + 1 }); });
+    // orient each item so its long side runs along the sheet's long side
+    items.forEach(function (it) {
+      var p = it.part;
+      it.rot = (p.h > p.w && p.h <= SW - 2 * margin) ? 1 : 0;
+      it.w = it.rot ? p.h : p.w; it.h = it.rot ? p.w : p.h;
+    });
+    items.sort(function (a, b) { return b.h - a.h || b.w - a.w; });
+    var sheets = [], unplaced = [];
+    function newSheet() { var s = { shelves: [], items: [], usedH: margin }; sheets.push(s); return s; }
+    items.forEach(function (it) {
+      if (it.w > SW - 2 * margin || it.h > SH - 2 * margin) {
+        // try the other orientation
+        var w2 = it.h, h2 = it.w;
+        if (w2 <= SW - 2 * margin && h2 <= SH - 2 * margin) { it.rot = 1 - it.rot; it.w = w2; it.h = h2; }
+        else { if (unplaced.indexOf(it.part.name) < 0) unplaced.push(it.part.name); return; }
+      }
+      for (var si = 0; si < sheets.length; si++) {
+        var sh = sheets[si];
+        for (var k = 0; k < sh.shelves.length; k++) {
+          var shelf = sh.shelves[k];
+          if (it.h <= shelf.h && shelf.x + it.w <= SW - margin) { it.x = shelf.x; it.y = shelf.y; shelf.x += it.w + gapP; sh.items.push(it); return; }
+        }
+        if (sh.usedH + it.h <= SH - margin) {
+          var ns = { y: sh.usedH, h: it.h, x: margin };
+          sh.shelves.push(ns); sh.usedH += it.h + gapP;
+          it.x = ns.x; it.y = ns.y; ns.x += it.w + gapP; sh.items.push(it); return;
+        }
+      }
+      var s2 = newSheet();
+      var ns2 = { y: margin, h: it.h, x: margin };
+      s2.shelves.push(ns2); s2.usedH = margin + it.h + gapP;
+      it.x = ns2.x; it.y = ns2.y; ns2.x += it.w + gapP; s2.items.push(it);
+    });
+    // transform function: part coords -> sheet coords
+    sheets.forEach(function (sh) {
+      sh.items.forEach(function (it) {
+        it.map = function (q) {
+          return it.rot ? [it.x + (it.part.h - q[1]), it.y + q[0]] : [it.x + q[0], it.y + q[1]];
+        };
+      });
+    });
+    return { sheets: sheets, unplaced: unplaced, sheetW: SW, sheetH: SH, parts: parts };
+  }
+
+  /* =====================================================================
+     FLIGHT SIMULATION
+     ===================================================================== */
+  function simulate(d, opts) {
+    opts = opts || {};
+    var an = analyze(d);
+    var geo = an.geo, mp = an.mp, rho = an.rho, L = d.launch;
+    var dt = 0.001, tMax = opts.tMax || 60, recDt = 1 / 60;
+    var theta = L.angle * DEG, wind = [-(L.headwind || 0), 0, 0];
+    var st = { p: [0, 0, -Math.max(L.height, 0.05)], v: [L.speed * Math.cos(theta), 0, -L.speed * Math.sin(theta)], q: qfromEuler(0, theta, 0), w: [0, 0, 0] };
+    var m = mp.mass;
+    function deriv(s) {
+      var vB = qinvrot(s.q, sub(s.v, wind));
+      var a = aeroForces(geo, mp.cgB, vB, s.w, rho);
+      var Fw = qrot(s.q, a.F);
+      var wdot = m3v(mp.Iinv, sub(a.M, cross(s.w, m3v(mp.I, s.w))));
+      var qd = qmul(s.q, [0, s.w[0], s.w[1], s.w[2]]);
+      return { p: s.v, v: [Fw[0] / m, Fw[1] / m, Fw[2] / m + G], q: [qd[0] * 0.5, qd[1] * 0.5, qd[2] * 0.5, qd[3] * 0.5], w: wdot };
+    }
+    function adv(s0, k, h) {
+      return { p: add(s0.p, mul(k.p, h)), v: add(s0.v, mul(k.v, h)), q: [s0.q[0] + k.q[0] * h, s0.q[1] + k.q[1] * h, s0.q[2] + k.q[2] * h, s0.q[3] + k.q[3] * h], w: add(s0.w, mul(k.w, h)) };
+    }
+    function step(s) {
+      var k1 = deriv(s), k2 = deriv(adv(s, k1, dt / 2)), k3 = deriv(adv(s, k2, dt / 2)), k4 = deriv(adv(s, k3, dt));
+      function c(f) { return add(add(f(k1), mul(add(f(k2), f(k3)), 2)), f(k4)); }
+      return {
+        p: add(s.p, mul(c(function (k) { return k.p; }), dt / 6)),
+        v: add(s.v, mul(c(function (k) { return k.v; }), dt / 6)),
+        q: qnorm([0, 1, 2, 3].map(function (i) { return s.q[i] + dt / 6 * (k1.q[i] + 2 * k2.q[i] + 2 * k3.q[i] + k4.q[i]); })),
+        w: add(s.w, mul(c(function (k) { return k.w; }), dt / 6))
+      };
+    }
+    function record(t, s) {
+      var vB = qinvrot(s.q, sub(s.v, wind)), yw = qrot(s.q, [0, 1, 0]), zw = qrot(s.q, [0, 0, 1]), xw = qrot(s.q, [1, 0, 0]);
+      return {
+        t: t, x: s.p[0], y: s.p[1], h: -s.p[2], q: s.q.slice(), speed: len(s.v),
+        alpha: Math.atan2(vB[2], vB[0]) / DEG,
+        bank: Math.asin(clamp(yw[2], -1, 1)) / DEG, inverted: zw[2] < -0.3,
+        noseUp: Math.asin(clamp(-xw[2], -1, 1)) / DEG,
+        gamma: Math.atan2(-s.v[2], Math.sqrt(s.v[0] * s.v[0] + s.v[1] * s.v[1])) / DEG,
+        rate: len(s.w) / DEG
+      };
+    }
+    var t = 0, rec = [record(0, st)], nextRec = recDt, ended = 'time', maxH = -st.p[2], maxSpeed = len(st.v);
+    while (t < tMax) {
+      var prevS = st;
+      st = step(st); t += dt;
+      if (!isFinite(st.p[0]) || !isFinite(st.v[0])) { ended = 'error'; st = prevS; break; }
+      var hNow = -st.p[2];
+      if (hNow > maxH) maxH = hNow;
+      var spd = len(st.v); if (spd > maxSpeed) maxSpeed = spd;
+      if (hNow <= 0) {
+        var h0 = -prevS.p[2], fr = h0 / Math.max(h0 - hNow, 1e-9);
+        var gs = { p: add(prevS.p, mul(sub(st.p, prevS.p), fr)), v: add(prevS.v, mul(sub(st.v, prevS.v), fr)), q: st.q, w: st.w };
+        gs.p[2] = 0; rec.push(record(t - dt + fr * dt, gs)); st = gs; ended = 'ground'; break;
+      }
+      if (t >= nextRec) { rec.push(record(t, st)); nextRec += recDt; }
+      if (Math.abs(st.p[0]) > 1000 || Math.abs(st.p[1]) > 1000 || hNow > 300) { ended = 'range'; rec.push(record(t, st)); break; }
+    }
+    var last = rec[rec.length - 1];
+    var res = {
+      records: rec, ended: ended, analysis: an, timeAloft: last.t,
+      distance: Math.sqrt(last.x * last.x + last.y * last.y), downrange: last.x, lateral: last.y,
+      maxHeight: maxH, maxSpeed: maxSpeed, landingSpeed: last.speed, landingAngle: last.gamma
+    };
+    res.behavior = classify(res, an);
+    return res;
+  }
+
+  function classify(res, an) {
+    var rec = res.records, out = [];
+    var stallDeg = (an.geo.strips[0].stall + an.geo.strips[0].alpha0) / DEG;
+    var peaks = 0, maxRoll = 0, maxAlpha = -999, maxRate = 0;
+    for (var i = 1; i < rec.length; i++) {
+      var r = rec[i];
+      if (i < rec.length - 1 && r.t > 0.25 && rec[i - 1].h < r.h && rec[i + 1].h <= r.h) {
+        var lo = r.h;
+        for (var j = i - 1; j >= 0 && rec[j].h <= rec[j + 1].h; j--) lo = rec[j].h;
+        if (r.h - lo > 0.10) peaks++;
+      }
+      if (Math.abs(r.bank) > maxRoll) maxRoll = Math.abs(r.bank);
+      if (r.t > 0.1 && r.alpha > maxAlpha) maxAlpha = r.alpha;
+      if (r.rate > maxRate) maxRate = r.rate;
+    }
+    var heading = Math.atan2(res.lateral, Math.max(res.downrange, 1e-6)) / DEG;
+    var turning = maxRoll > 30 || Math.abs(heading) > 10;
+    var turnText = 'Turn to the ' + (res.lateral < 0 ? 'left' : 'right') + ': maximum bank angle ' + maxRoll.toFixed(0) + '°.';
+    var tail = rec.slice(Math.max(0, rec.length - 30)), recovered = rec.length > 40;
+    tail.forEach(function (r) { if (Math.abs(r.alpha) > stallDeg + 5) recovered = false; });
+    var key = 'glide';
+    if (an.sm >= 0 && maxAlpha > 70 && recovered) {
+      key = 'stall'; out.push('Climb and stall: the glider climbed steeply, lost its speed, fell backward, then recovered and glided.');
+      if (turning) out.push(turnText);
+    } else if (an.sm < 0 || maxRate > 1500 || maxAlpha > 70) {
+      key = 'tumble';
+      out.push(an.sm < 0 ? 'Tumble: the glider is unstable and turns end over end.' : 'Tumble: the glider rotated out of control before it reached the floor.');
+    } else {
+      var looped = false, aInv = 0;
+      rec.forEach(function (r) { if (r.inverted) { looped = true; aInv = Math.max(aInv, Math.abs(r.alpha)); } });
+      if (looped && aInv < stallDeg + 5) { key = 'loop'; out.push('Loop: the glider climbed over the top and flew a full loop.'); }
+      if (peaks >= 2) { if (key === 'glide') key = 'oscillation'; out.push('Pitch oscillation: the glider climbs, slows, and dives repeatedly (' + peaks + ' climbs).'); }
+      else if (maxAlpha > stallDeg + 2) { if (key === 'glide') key = 'stall'; out.push('Stall: the angle of attack passed the stall angle (' + maxAlpha.toFixed(0) + '° compared with ' + stallDeg.toFixed(0) + '°).'); }
+      if (res.landingAngle < -35 && peaks < 2) { if (key === 'glide') key = 'dive'; out.push('Steep dive: the glider met the ground at ' + Math.abs(res.landingAngle).toFixed(0) + '° below horizontal.'); }
+      if (turning) { if (key === 'glide') key = res.lateral < 0 ? 'turnLeft' : 'turnRight'; out.push(turnText); }
+      if (!out.length) out.push('Smooth glide: steady descent with no stall or turn.');
+    }
+    return { key: key, text: out, peaks: peaks, maxRoll: maxRoll, maxAlpha: maxAlpha };
+  }
+
+  var BALLAST_PRESETS = [
+    { name: 'US penny', mass: 2.5 }, { name: 'US nickel', mass: 5.0 }, { name: 'US dime', mass: 2.268 },
+    { name: 'US quarter', mass: 5.67 }, { name: 'Steel washer', mass: 0 }, { name: 'Modeling clay', mass: 0 }, { name: 'Other', mass: 0 }
+  ];
+
+  var api = {
+    DEG: DEG, exampleGlider: exampleGlider, sanitize: sanitize, buildGeometry: buildGeometry,
+    massProps: massProps, analyze: analyze, simulate: simulate, layoutParts: layoutParts,
+    fuseDepth: fuseDepth, airDensity: airDensity, aeroForces: aeroForces,
+    qrot: qrot, d2b: d2b, BALLAST_PRESETS: BALLAST_PRESETS, GLUE_G_PER_CM: GLUE_G_PER_CM
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.GliderPhysics = api;
+})(this);
+
+</script>
+<script>
+/* =====================================================================
+   Foam Board Glider Simulator — user interface
+   ===================================================================== */
+(function () {
+  'use strict';
+  var P = window.GliderPhysics;
+  var DEG = P.DEG;
+  var C = { line: '#39ff6a', dim: '#1d7a38', faint: '#0f3a1c', grid: '#0a2613', amber: '#ffb000', white: '#e9ffef', cyan: '#46d9ff', red: '#ff5a4f' };
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.5);   // keep drawing light on slow machines
+  var STORE_KEY = 'foamGliderSimulator.autosave.v1';
+
+  var state = {
+    design: null, an: null, sim: null, tab: 'design', part: 'wing',
+    planeScale: 2, playSpeed: 1, play: null
+  };
+
+  /* ---------------- small helpers ---------------- */
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, html) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) { if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function getP(o, path) { return path.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+  function setP(o, path, v) { var ks = path.split('.'), last = ks.pop(); ks.reduce(function (a, k) { return a[k]; }, o)[last] = v; }
+  function fmt(v, n) { return (v === null || v === undefined || !isFinite(v)) ? '—' : Number(v).toFixed(n); }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.style.display = 'none'; }, 2600);
+  }
+  function download(name, text, type) {
+    var blob = new Blob([text], { type: type || 'application/octet-stream' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function safeName(s) { return (String(s || 'foam-glider').replace(/[^A-Za-z0-9 _-]+/g, '').trim().replace(/\s+/g, '-') || 'foam-glider'); }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  /* ---------------- part and field definitions ---------------- */
+  var PARTS = [
+    { id: 'info', name: 'Design information', glyph: '≡', fields: [
+      { p: 'name', label: 'Design name', type: 'text' },
+      { p: 'designer', label: 'Designer', type: 'text' },
+      { p: 'notes', label: 'Notes', type: 'textarea' }
+    ] },
+    { id: 'board', name: 'Foam board', glyph: '▭', fields: [
+      { p: 'board.w', label: 'Sheet width', unit: 'mm', min: 200, max: 1500, step: 1 },
+      { p: 'board.h', label: 'Sheet length', unit: 'mm', min: 200, max: 1500, step: 1, help: 'Dollar Tree foam board is 508 × 762 mm (20 × 30 inches).' },
+      { p: 'board.thickness', label: 'Thickness', unit: 'mm', min: 2, max: 12, step: 0.1, help: 'Dollar Tree board is about 4.8 mm (3/16 inch).' },
+      { p: 'board.sheetMass', label: 'Mass of one sheet', unit: 'g', min: 20, max: 1000, step: 1, help: 'Weigh a full sheet on a kitchen scale. A Dollar Tree sheet weighs about 115 g; other brands are heavier.' }
+    ] },
+    { id: 'fuselage', name: 'Fuselage', glyph: '▬', fields: [
+      { p: 'fuselage.length', label: 'Length', unit: 'mm', min: 150, max: 1400, step: 1, help: 'From the nose to the back end of the fuselage.' },
+      { p: 'fuselage.height', label: 'Height', unit: 'mm', min: 15, max: 150, step: 1, help: 'Height of the fuselage under the wing.' },
+      { p: 'fuselage.tailHeight', label: 'Height at tail', unit: 'mm', min: 8, max: 150, step: 1, help: 'The fuselage tapers from the back of the wing to this height at the tail.' },
+      { p: 'fuselage.noseSlope', label: 'Nose slope length', unit: 'mm', min: 0, max: 400, step: 1, help: 'Length of the sloped bottom edge at the nose. 0 makes a square nose.' },
+      { p: 'fuselage.layers', label: 'Layers of board', unit: '', min: 1, max: 3, step: 1, int: true, help: 'Gluing 2 or 3 identical layers together makes a stiffer fuselage and gives the nose ballast more to grip.' }
+    ] },
+    { id: 'wing', name: 'Wing', glyph: '◇', fields: [
+      { p: 'wing.airfoil', label: 'Wing type', type: 'select', options: [['folded', 'Folded airfoil (curved top)'], ['flat', 'Flat plate']] },
+      { p: 'wing.thickness', label: 'Airfoil thickness', unit: 'mm', min: 6, max: 60, step: 0.5, help: 'Height of the folded airfoil at the spar. About 8–12 % of the chord works well. Thicker airfoils have more camber.', show: function (d) { return d.wing.airfoil === 'folded'; } },
+      { p: 'wing.x', label: 'Wing position', unit: 'mm', min: 0, max: 1000, step: 1, help: 'From the nose to the leading (front) edge of the wing where it meets the fuselage.' },
+      { p: 'wing.rootChord', label: 'Root chord', unit: 'mm', min: 40, max: 400, step: 1, help: 'Front-to-back length of the wing at the fuselage.' },
+      { p: 'wing.tipChord', label: 'Tip chord', unit: 'mm', min: 20, max: 400, step: 1, help: 'Front-to-back length of the wing at the tip.' },
+      { p: 'wing.semiSpan', label: 'Wing half span', unit: 'mm', min: 80, max: 1000, step: 1, help: 'Length of one wing, from the center of the fuselage to the tip.' },
+      { p: 'wing.sweep', label: 'Sweep', unit: 'mm', min: -100, max: 400, step: 1, help: 'How far back the leading edge at the tip sits compared with the root.' },
+      { p: 'wing.dihedral', label: 'Dihedral angle', unit: '°', min: -10, max: 25, step: 0.5, help: 'Upward angle of each wing half. 3–8° gives roll stability.' },
+      { p: 'wing.incidence', label: 'Wing incidence', unit: '°', min: -5, max: 10, step: 0.5, help: 'Angle of the wing compared with the fuselage top edge. The wing seat is cut at this angle, front edge raised.' }
+    ] },
+    { id: 'hstab', name: 'Stabilizer + elevator', glyph: '⊤', fields: [
+      { p: 'hstab.x', label: 'Position', unit: 'mm', min: 50, max: 1400, step: 1, help: 'From the nose to the leading edge of the stabilizer.' },
+      { p: 'hstab.rootChord', label: 'Root chord', unit: 'mm', min: 20, max: 300, step: 1 },
+      { p: 'hstab.tipChord', label: 'Tip chord', unit: 'mm', min: 10, max: 300, step: 1 },
+      { p: 'hstab.semiSpan', label: 'Half span', unit: 'mm', min: 30, max: 500, step: 1, help: 'From the center to one tip of the stabilizer.' },
+      { p: 'hstab.sweep', label: 'Sweep', unit: 'mm', min: -50, max: 300, step: 1 },
+      { p: 'hstab.incidence', label: 'Incidence', unit: '°', min: -8, max: 8, step: 0.5, help: 'Angle of the stabilizer seat. Usually 0°, with the wing set at a positive incidence.' },
+      { p: 'hstab.elevChord', label: 'Elevator depth', unit: 'mm', min: 0, max: 150, step: 1, help: 'Front-to-back depth of the elevator hinged at the back of the stabilizer. 0 = no elevator.' },
+      { p: 'hstab.elevUp', label: 'Elevator bend', unit: '°', min: -30, max: 30, step: 0.5, help: 'Positive = trailing edge bent up, which raises the nose and slows the glide.' }
+    ] },
+    { id: 'vstab', name: 'Fin + rudder', glyph: '⊥', fields: [
+      { p: 'vstab.x', label: 'Position', unit: 'mm', min: 50, max: 1400, step: 1, help: 'From the nose to the leading edge of the fin at its base.' },
+      { p: 'vstab.rootChord', label: 'Root chord', unit: 'mm', min: 20, max: 300, step: 1 },
+      { p: 'vstab.tipChord', label: 'Tip chord', unit: 'mm', min: 10, max: 300, step: 1 },
+      { p: 'vstab.height', label: 'Height', unit: 'mm', min: 20, max: 400, step: 1 },
+      { p: 'vstab.sweep', label: 'Sweep', unit: 'mm', min: -50, max: 300, step: 1 },
+      { p: 'vstab.rudderChord', label: 'Rudder depth', unit: 'mm', min: 0, max: 150, step: 1, help: '0 = no rudder.' },
+      { p: 'vstab.rudderRight', label: 'Rudder bend', unit: '°', min: -30, max: 30, step: 0.5, help: 'Positive = trailing edge bent to the right, which turns the glider right. Negative turns it left.' }
+    ] },
+    { id: 'canard', name: 'Canard (optional)', glyph: '⊤', toggle: 'canard.enabled', fields: [
+      { p: 'canard.x', label: 'Position', unit: 'mm', min: 5, max: 600, step: 1, help: 'From the nose to the leading edge of the canard. It sits on top of the fuselage, ahead of the wing.' },
+      { p: 'canard.rootChord', label: 'Root chord', unit: 'mm', min: 15, max: 200, step: 1 },
+      { p: 'canard.tipChord', label: 'Tip chord', unit: 'mm', min: 10, max: 200, step: 1 },
+      { p: 'canard.semiSpan', label: 'Half span', unit: 'mm', min: 20, max: 400, step: 1, help: 'From the center to one tip of the canard. Keep the canard well smaller than the wing.' },
+      { p: 'canard.sweep', label: 'Sweep', unit: 'mm', min: -30, max: 200, step: 1 },
+      { p: 'canard.incidence', label: 'Incidence', unit: '°', min: -4, max: 12, step: 0.5, help: 'Angle of the canard seat. Set it 1–3° above the wing incidence so the canard stalls first and the nose drops.' }
+    ] },
+    { id: 'winglets', name: 'Winglets (optional)', glyph: '⊥', toggle: 'winglets.enabled', fields: [
+      { p: 'winglets.height', label: 'Height', unit: 'mm', min: 10, max: 200, step: 1, help: 'Height of each winglet above the wing tip.' },
+      { p: 'winglets.rootChord', label: 'Root chord', unit: 'mm', min: 10, max: 300, step: 1, help: 'Front-to-back length at the wing tip. It cannot be longer than the wing tip chord. The trailing edges line up.' },
+      { p: 'winglets.tipChord', label: 'Tip chord', unit: 'mm', min: 5, max: 300, step: 1 },
+      { p: 'winglets.sweep', label: 'Sweep', unit: 'mm', min: -20, max: 150, step: 1, help: 'How far back the top of the winglet sits compared with its base.' },
+      { p: 'winglets.cant', label: 'Cant angle', unit: '°', min: 0, max: 60, step: 1, help: '0° = straight up. A larger angle leans each winglet outward.' }
+    ] },
+    { id: 'ballast', name: 'Nose ballast', glyph: '●', custom: 'ballast' },
+    { id: 'glue', name: 'Glue and tape', glyph: '≈', custom: 'glue' }
+  ];
+  var LAUNCH_FIELDS = [
+    { p: 'launch.speed', label: 'Launch speed', unit: 'm/s', min: 0.5, max: 25, step: 0.5, help: 'A gentle level toss is about 5–6 m/s. A hard throw is 10 m/s or more.' },
+    { p: 'launch.angle', label: 'Launch angle', unit: '°', min: -45, max: 80, step: 1, help: 'Angle of the throw above horizontal. 0 = level.' },
+    { p: 'launch.height', label: 'Launch height', unit: 'm', min: 0.2, max: 30, step: 0.1, help: 'Height of your hand when you release the glider.' },
+    { p: 'launch.headwind', label: 'Headwind', unit: 'm/s', min: -10, max: 10, step: 0.5, help: 'Wind blowing toward the thrower. Negative = tailwind. Launch into the wind outdoors.' },
+    { p: 'launch.temperature', label: 'Air temperature', unit: '°C', min: -30, max: 50, step: 1 },
+    { p: 'launch.elevation', label: 'Site elevation', unit: 'm', min: -100, max: 4000, step: 10, help: 'Height of the launch site above sea level.' }
+  ];
+  var PART_KINDS = { wing: ['wing'], fuselage: ['fuselage'], hstab: ['hstab', 'elevator'], vstab: ['vstab', 'rudder'], canard: ['canard'], winglets: ['winglet'] };
+  var BEHAVIORS = [['glide', 'Smooth glide'], ['oscillation', 'Pitch oscillation'], ['stall', 'Stall'], ['dive', 'Steep dive'], ['turnLeft', 'Turn to the left'], ['turnRight', 'Turn to the right'], ['loop', 'Loop'], ['tumble', 'Tumble']];
+  function behaviorName(k) { for (var i = 0; i < BEHAVIORS.length; i++) if (BEHAVIORS[i][0] === k) return BEHAVIORS[i][1]; return k || '—'; }
+
+  function exampleWinglets() {
+    var d = P.exampleGlider();
+    d.name = 'Foam Glider One + winglets';
+    d.winglets.enabled = true;
+    return d;
+  }
+  function exampleCanard() {
+    var d = P.exampleGlider();
+    d.name = 'Canard Glider';
+    d.canard.enabled = true;
+    d.canard.x = 40; d.canard.rootChord = 60; d.canard.tipChord = 45; d.canard.semiSpan = 95; d.canard.incidence = 4.5;
+    return d;
+  }
+  function exampleFlat() {
+    var d = P.exampleGlider();
+    d.name = 'Flat-Wing Trainer';
+    d.wing.airfoil = 'flat'; d.wing.incidence = 2; d.wing.rootChord = 160; d.wing.tipChord = 120; d.wing.semiSpan = 340;
+    d.hstab.elevUp = 0;
+    d.ballast = [{ name: 'US nickel', mass: 5.0, count: 7, x: 25 }];
+    return d;
+  }
+
+  /* ---------------- field widgets ---------------- */
+  function fieldRow(f, onChange) {
+    var d = state.design, v = getP(d, f.p);
+    var id = 'f_' + f.p.replace(/\./g, '_');
+    var wrap = el('div');
+    var row = el('div', { class: 'field' + (f.type === 'textarea' || f.type === 'text' ? ' wide' : '') });
+    var lab = el('label', { for: id }, esc(f.label));
+    row.appendChild(lab);
+    var inp;
+    if (f.type === 'select') {
+      inp = el('select', { id: id });
+      f.options.forEach(function (o) { var op = el('option', { value: o[0] }, esc(o[1])); if (o[0] === v) op.selected = true; inp.appendChild(op); });
+      inp.addEventListener('change', function () { setP(d, f.p, inp.value); onChange(f, true); });
+      row.style.gridTemplateColumns = '1fr 172px';
+    } else if (f.type === 'text') {
+      inp = el('input', { id: id, type: 'text', maxlength: '60' }); inp.value = v || '';
+      inp.addEventListener('input', function () { setP(d, f.p, inp.value); onChange(f, false); });
+    } else if (f.type === 'textarea') {
+      inp = el('textarea', { id: id, rows: '4' }); inp.value = v || '';
+      inp.addEventListener('input', function () { setP(d, f.p, inp.value); onChange(f, false); });
+    } else {
+      inp = el('input', { id: id, type: 'number', min: f.min, max: f.max, step: f.step, inputmode: 'decimal' });
+      inp.value = v;
+      inp.addEventListener('input', function () {
+        var x = parseFloat(inp.value);
+        if (!isFinite(x) || x < f.min || x > f.max) { inp.classList.add('bad'); inp.title = 'Allowed range: ' + f.min + ' to ' + f.max + ' ' + (f.unit || ''); return; }
+        if (f.int) x = Math.round(x);
+        inp.classList.remove('bad'); inp.title = '';
+        setP(d, f.p, x); onChange(f, false);
+      });
+      inp.addEventListener('blur', function () { inp.value = getP(d, f.p); inp.classList.remove('bad'); });
+    }
+    row.appendChild(inp);
+    if (f.type !== 'select' && f.type !== 'text' && f.type !== 'textarea') row.appendChild(el('span', { class: 'unit' }, esc(f.unit || '')));
+    wrap.appendChild(row);
+    if (f.help) wrap.appendChild(el('div', { class: 'help' }, esc(f.help)));
+    return wrap;
+  }
+
+  /* ---------------- side panel ---------------- */
+  function renderAside() {
+    var a = $('aside'); a.innerHTML = '';
+    if (state.tab === 'design') renderPartsPanel(a);
+    else if (state.tab === 'flight') renderLaunchPanel(a);
+    else if (state.tab === 'template') renderTemplatePanel(a);
+    else renderTestPanel(a);
+  }
+  function renderPartsPanel(a) {
+    a.appendChild(el('h2', null, 'PARTS'));
+    var d = state.design;
+    PARTS.forEach(function (pt) {
+      var row = el('div', { class: 'part' + (state.part === pt.id ? ' sel' : ''), tabindex: '0', role: 'button' });
+      row.appendChild(el('span', { class: 'glyph' }, pt.glyph));
+      row.appendChild(el('span', null, esc(pt.name)));
+      if (pt.toggle) {
+        var cb = el('input', { type: 'checkbox', title: 'Include this part' });
+        cb.checked = !!getP(d, pt.toggle);
+        cb.addEventListener('click', function (e) { e.stopPropagation(); });
+        cb.addEventListener('change', function () { setP(d, pt.toggle, cb.checked); state.part = pt.id; changed(true); renderAside(); });
+        row.appendChild(cb);
+      }
+      function pick() { state.part = pt.id; renderAside(); drawDesign(); }
+      row.addEventListener('click', pick);
+      row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      a.appendChild(row);
+    });
+    var pt = PARTS.filter(function (x) { return x.id === state.part; })[0];
+    var box = el('div', { class: 'fields' });
+    box.appendChild(el('h3', null, esc(pt.name.toUpperCase())));
+    if (pt.toggle && !getP(d, pt.toggle)) box.appendChild(el('div', { class: 'note' }, 'This part is turned off. Check the box beside its name to include it. The glider is unchanged while it is off.'));
+    if (pt.custom === 'ballast') renderBallastEditor(box);
+    else if (pt.custom === 'glue') renderGlueEditor(box);
+    else pt.fields.forEach(function (f) {
+      if (f.show && !f.show(d)) return;
+      box.appendChild(fieldRow(f, function (ff, rerender) { changed(); if (rerender) renderAside(); if (ff.p === 'name') updateTitle(); }));
+    });
+    a.appendChild(box);
+    a.appendChild(el('div', { class: 'note', style: 'margin-top:10px' }, 'All lengths are in millimeters. Distances "from the nose" are measured from the front tip of the fuselage toward the tail.'));
+  }
+
+  function numInput(val, min, max, step, onOK, title) {
+    var inp = el('input', { type: 'number', min: min, max: max, step: step, title: title || '' });
+    inp.value = val;
+    inp.addEventListener('input', function () {
+      var x = parseFloat(inp.value);
+      if (!isFinite(x) || x < min || x > max) { inp.classList.add('bad'); return; }
+      inp.classList.remove('bad'); onOK(x);
+    });
+    return inp;
+  }
+
+  function renderBallastEditor(box) {
+    var d = state.design;
+    box.appendChild(el('div', { class: 'help' }, 'Ballast moves the center of gravity forward. Tape or glue each item to the side of the nose at its distance from the nose. Coins have exact standard masses; weigh anything else on a scale.'));
+    var list = el('div', { class: 'blist' });
+    if (!d.ballast.length) list.appendChild(el('div', { class: 'note' }, 'No ballast.'));
+    d.ballast.forEach(function (b, i) {
+      var item = el('div', { class: 'bitem' });
+      var r1 = el('div', { class: 'brow', style: 'grid-template-columns:1fr 22px' });
+      var sel = el('select', { title: 'Type of ballast' });
+      var known = false;
+      P.BALLAST_PRESETS.forEach(function (pr) {
+        var o = el('option', { value: pr.name }, esc(pr.name + (pr.mass ? ' (' + pr.mass + ' g)' : '')));
+        if (pr.name === b.name) { o.selected = true; known = true; }
+        sel.appendChild(o);
+      });
+      if (!known) { var o2 = el('option', { value: b.name }, esc(b.name)); o2.selected = true; sel.appendChild(o2); }
+      sel.addEventListener('change', function () {
+        var pr = P.BALLAST_PRESETS.filter(function (x) { return x.name === sel.value; })[0];
+        b.name = sel.value; if (pr && pr.mass) b.mass = pr.mass;
+        changed(); renderAside();
+      });
+      var del = el('button', { class: 'x', title: 'Remove this ballast item' }, '✕');
+      del.addEventListener('click', function () { d.ballast.splice(i, 1); changed(); renderAside(); });
+      r1.appendChild(sel); r1.appendChild(del);
+      item.appendChild(r1);
+      var hd = el('div', { class: 'bhead', style: 'grid-template-columns:1fr 1fr 1fr;margin-top:3px' }, '<span>Mass each (g)</span><span>How many</span><span>From nose (mm)</span>');
+      item.appendChild(hd);
+      var r2 = el('div', { class: 'brow', style: 'grid-template-columns:1fr 1fr 1fr' });
+      r2.appendChild(numInput(b.mass, 0, 500, 0.01, function (x) { b.mass = x; changed(); }, 'Mass of one item in grams'));
+      r2.appendChild(numInput(b.count, 0, 50, 1, function (x) { b.count = Math.round(x); changed(); }, 'Number of items'));
+      r2.appendChild(numInput(b.x, 0, 1400, 1, function (x) { b.x = x; changed(); }, 'Distance from the nose in mm'));
+      item.appendChild(r2);
+      if (!b.mass) item.appendChild(el('div', { class: 'warn', style: 'font-size:11.5px;margin-top:2px' }, '▲ Weigh one item and enter its mass.'));
+      list.appendChild(item);
+    });
+    box.appendChild(list);
+    var addB = el('button', { style: 'width:100%' }, '+ Add ballast item');
+    addB.addEventListener('click', function () { d.ballast.push({ name: 'US penny', mass: 2.5, count: 1, x: 20 }); changed(); renderAside(); });
+    box.appendChild(addB);
+    var an = state.an;
+    box.appendChild(el('div', { class: 'note', style: 'margin-top:6px' }, 'Total ballast: ' + fmt(an.geo.ballastMass, 1) + ' g. Static margin now ' + fmt(an.sm * 100, 1) + ' % (target 5–15 %).'));
+  }
+
+  function renderGlueEditor(box) {
+    var d = state.design, g = state.an.geo;
+    box.appendChild(el('h3', null, 'HOT GLUE'));
+    var sel = el('select', { style: 'width:100%' });
+    [['auto', 'Estimate from the glue joints'], ['measured', 'Use a measured value']].forEach(function (o) {
+      var op = el('option', { value: o[0] }, o[1]); if (d.glue.mode === o[0]) op.selected = true; sel.appendChild(op);
+    });
+    sel.addEventListener('change', function () { d.glue.mode = sel.value; changed(); renderAside(); });
+    box.appendChild(sel);
+    if (d.glue.mode === 'measured') {
+      box.appendChild(fieldRow({ p: 'glue.mass', label: 'Glue used', unit: 'g', min: 0, max: 500, step: 0.5 }, function () { changed(); }));
+      box.appendChild(el('div', { class: 'help' }, 'Weigh your glue sticks before and after building. The difference is the glue on the glider.'));
+    } else {
+      box.appendChild(el('div', { class: 'help', style: 'margin-top:4px' }, 'Estimate: ' + fmt(g.glueLen / 10, 0) + ' cm of glue bead × ' + P.GLUE_G_PER_CM + ' g per cm = <b>' + fmt(g.glueAuto, 1) + ' g</b>. The joints counted are wing to fuselage, the spar and trailing-edge seams of a folded wing, the center joint, the tail parts and the fuselage layers.'));
+    }
+    box.appendChild(el('h3', null, 'TAPE'));
+    box.appendChild(fieldRow({ p: 'tape.length', label: 'Tape used', unit: 'cm', min: 0, max: 2000, step: 1, help: 'Packing tape on the leading edges and nose makes the glider tougher.' }, function () { changed(); }));
+    box.appendChild(fieldRow({ p: 'tape.gPerM', label: 'Tape mass', unit: 'g/m', min: 0, max: 50, step: 0.1, help: 'Weigh 1 m of your tape. Clear 48 mm packing tape is about 3–4 g per meter.' }, function () { changed(); }));
+    box.appendChild(fieldRow({ p: 'tape.x', label: 'Tape center', unit: 'mm', min: 0, max: 1400, step: 1, help: 'Distance from the nose to the middle of the taped area.' }, function () { changed(); }));
+  }
+
+
+  function renderLaunchPanel(a) {
+    a.appendChild(el('h2', null, 'LAUNCH CONDITIONS'));
+    LAUNCH_FIELDS.forEach(function (f) { a.appendChild(fieldRow(f, function () { changed(false); })); });
+    var b = el('button', { class: 'primary bigbtn', id: 'btnLaunch' }, 'LAUNCH');
+    b.addEventListener('click', launch);
+    a.appendChild(b);
+    a.appendChild(el('h2', null, 'REPLAY'));
+    var seg = el('div', { class: 'seg' });
+    [0.25, 0.5, 1].forEach(function (s) {
+      var bt = el('button', { class: state.playSpeed === s ? 'on' : '' }, s === 1 ? 'Real time' : (s + '×'));
+      bt.addEventListener('click', function () { state.playSpeed = s; renderAside(); });
+      seg.appendChild(bt);
+    });
+    a.appendChild(seg);
+    var rb = el('button', { style: 'width:100%;margin-top:4px' }, 'Replay flight');
+    rb.disabled = !state.sim;
+    rb.addEventListener('click', function () { if (state.sim) startReplay(); });
+    a.appendChild(rb);
+    a.appendChild(el('h2', null, 'GLIDER DRAWING SIZE'));
+    var seg2 = el('div', { class: 'seg' });
+    [1, 2, 4].forEach(function (s) {
+      var bt = el('button', { class: state.planeScale === s ? 'on' : '' }, s + '×');
+      bt.addEventListener('click', function () { state.planeScale = s; renderAside(); drawFlightFrame(); });
+      seg2.appendChild(bt);
+    });
+    a.appendChild(seg2);
+    a.appendChild(el('div', { class: 'note' }, 'The flight path is drawn at true scale. The glider is drawn ' + (state.planeScale === 1 ? 'at its real size.' : state.planeScale + ' times its real size so its attitude is easy to see.')));
+  }
+  function renderTestPanel(a) {
+    a.appendChild(el('h2', null, 'ADD A TEST FLIGHT'));
+    var form = el('div');
+    form.innerHTML =
+      '<div class="field" style="grid-template-columns:1fr 172px"><label for="t_date">Date</label><input id="t_date" type="date" value="' + today() + '"></div>' +
+      '<div class="field wide"><label for="t_team">Thrower or team</label><input id="t_team" type="text" maxlength="40"></div>' +
+      '<div class="field"><label for="t_dist">Distance</label><input id="t_dist" type="number" min="0" max="500" step="0.01"><span class="unit">m</span></div>' +
+      '<div class="help">Straight-line distance from the launch point to where the glider first touched the ground.</div>' +
+      '<div class="field"><label for="t_time">Time aloft</label><input id="t_time" type="number" min="0" max="120" step="0.01"><span class="unit">s</span></div>' +
+      '<div class="help">From release until the glider first touches the ground.</div>' +
+      '<div class="field" style="grid-template-columns:1fr 172px"><label for="t_beh">How it flew</label><select id="t_beh">' +
+      BEHAVIORS.map(function (b) { return '<option value="' + b[0] + '">' + b[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field wide"><label for="t_notes">Notes</label><textarea id="t_notes" rows="2"></textarea></div>';
+    a.appendChild(form);
+    var L = state.design.launch;
+    a.appendChild(el('div', { class: 'note', style: 'margin:4px 0' }, 'The prediction for comparison uses the launch conditions on the FLIGHT screen: ' + L.speed + ' m/s at ' + L.angle + '°, released at ' + L.height + ' m. Set them to match the real throw first.'));
+    var b = el('button', { class: 'primary bigbtn' }, 'ADD TEST FLIGHT');
+    b.addEventListener('click', addTest);
+    a.appendChild(b);
+    var ex = el('button', { style: 'width:100%' }, 'Export all test flights (CSV)');
+    ex.addEventListener('click', exportCSV);
+    a.appendChild(ex);
+    a.appendChild(el('div', { class: 'note', style: 'margin-top:6px' }, 'Test flights are saved inside the design file. The CSV file opens in Google Sheets or Excel for graphing.'));
+  }
+
+  /* ---------------- recompute + autosave ---------------- */
+  var pending = false;
+  function changed(geometryChanged) {
+    state.an = P.analyze(state.design);
+    state.sim = null;
+    stopReplay();
+    autosave();
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function () {
+      pending = false;
+      if (state.tab === 'design') { drawDesign(); renderReadouts(); }
+      else if (state.tab === 'flight') { renderResults(); drawFlightFrame(); }
+      else if (state.tab === 'template') renderTemplate();
+      else if (state.tab === 'tests') renderTests();
+    });
+  }
+  function autosave() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state.design)); } catch (e) { /* storage may be blocked */ }
+  }
+  function updateTitle() { $('designTitle').textContent = '— ' + (state.design.name || 'Untitled'); document.title = (state.design.name || 'Untitled') + ' — Foam Board Glider Simulator'; }
+
+  /* ---------------- canvas helpers ---------------- */
+  function prepCanvas(cv) {
+    var r = cv.getBoundingClientRect();
+    var w = Math.max(10, Math.floor(r.width)), h = Math.max(10, Math.floor(r.height));
+    if (cv.width !== Math.floor(w * DPR) || cv.height !== Math.floor(h * DPR)) { cv.width = Math.floor(w * DPR); cv.height = Math.floor(h * DPR); }
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    return { ctx: ctx, w: w, h: h };
+  }
+  /* vector-display line: a wide dim stroke under a thin bright stroke */
+  function vline(ctx, pts, color, width, closed, glow) {
+    if (pts.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    if (closed) ctx.closePath();
+    if (glow !== false) {
+      ctx.globalAlpha = 0.22; ctx.strokeStyle = color; ctx.lineWidth = (width || 1.3) + 3; ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = width || 1.3; ctx.stroke();
+  }
+  function text(ctx, s, x, y, color, align, size) {
+    ctx.font = (size || 11) + 'px Consolas, "Lucida Console", "Courier New", monospace';
+    ctx.fillStyle = color || C.dim; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(s, x, y);
+  }
+  function cgSymbol(ctx, x, y, r) {
+    ctx.strokeStyle = C.white; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = C.white;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, -Math.PI / 2, 0); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, Math.PI / 2, Math.PI); ctx.closePath(); ctx.fill();
+  }
+  function npSymbol(ctx, x, y, r) {
+    ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(x, y, 2, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  /* =====================================================================
+     DESIGN SCREEN: three orthographic views at one common scale
+     ===================================================================== */
+  var DVIEWS = [
+    { id: 'dTop', proj: function (p) { return [p[0], -p[1]]; } },
+    { id: 'dRear', proj: function (p) { return [p[1], -p[2]]; } },
+    { id: 'dSide', proj: function (p) { return [p[0], -p[2]]; } }
+  ];
+  function drawDesign() {
+    if (state.tab !== 'design') return;
+    var an = state.an, geo = an.geo, d = state.design;
+    var cg = an.mp.cg, np = [an.npX, 0, 0];
+    var sel = PART_KINDS[state.part] || [];
+    var allPts = [];
+    geo.lines.forEach(function (ln) { allPts = allPts.concat(ln.pts); });
+    allPts.push(cg, np);
+    var preps = [], scale = Infinity, pad = 26;
+    DVIEWS.forEach(function (v) {
+      var pr = prepCanvas($(v.id).querySelector('canvas'));
+      var mn = [Infinity, Infinity], mx = [-Infinity, -Infinity];
+      allPts.forEach(function (p) { var q = v.proj(p); mn[0] = Math.min(mn[0], q[0]); mn[1] = Math.min(mn[1], q[1]); mx[0] = Math.max(mx[0], q[0]); mx[1] = Math.max(mx[1], q[1]); });
+      var du = Math.max(mx[0] - mn[0], 50), dv = Math.max(mx[1] - mn[1], 50);
+      scale = Math.min(scale, (pr.w - 2 * pad) / du, (pr.h - 2 * pad - 14) / dv);
+      preps.push({ v: v, pr: pr, mn: mn, mx: mx });
+    });
+    var gridMM = scale * 10 > 6 ? 10 : 50;
+    preps.forEach(function (o) {
+      var ctx = o.pr.ctx, w = o.pr.w, h = o.pr.h;
+      var cu = (o.mn[0] + o.mx[0]) / 2, cv = (o.mn[1] + o.mx[1]) / 2;
+      function S(p) { var q = o.v.proj(p); return [w / 2 + (q[0] - cu) * scale, h / 2 + 7 + (q[1] - cv) * scale]; }
+      var o0 = S([0, 0, 0]), step = gridMM * scale;
+      for (var gx = o0[0] % step; gx < w; gx += step) { var mj = Math.round((gx - o0[0]) / step) % 5 === 0; ctx.strokeStyle = mj ? C.faint : C.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke(); }
+      for (var gy = o0[1] % step; gy < h; gy += step) { var mj2 = Math.round((gy - o0[1]) / step) % 5 === 0; ctx.strokeStyle = mj2 ? C.faint : C.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
+      geo.lines.forEach(function (ln) {
+        if (ln.sideOnly && o.v.id !== 'dSide') return;
+        var on = sel.indexOf(ln.kind) >= 0;
+        vline(ctx, ln.pts.map(S), on ? C.white : C.line, on ? 1.8 : 1.3, !!ln.closed);
+      });
+      if (o.v.id !== 'dRear') geo.ballastPts.forEach(function (b) {
+        var c = S(b.p), on = state.part === 'ballast';
+        ctx.strokeStyle = on ? C.white : C.cyan; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.arc(c[0], c[1], 4, 0, 2 * Math.PI); ctx.stroke();
+        if (o.v.id === 'dSide') text(ctx, b.count + ' × ' + b.name, c[0], c[1] + 12, C.cyan, 'center', 10);
+      });
+      var cgS = S(cg);
+      if (o.v.id === 'dRear') cgSymbol(ctx, cgS[0], cgS[1], 6);
+      else {
+        var npS = S([np[0], 0, cg[2]]);
+        npSymbol(ctx, npS[0], npS[1], 7);
+        cgSymbol(ctx, cgS[0], cgS[1], 6);
+        text(ctx, 'CG', cgS[0], cgS[1] - 14, C.white, 'center', 11);
+        text(ctx, 'NP', npS[0], npS[1] + 15, C.amber, 'center', 11);
+      }
+      if (o.v.id === 'dTop') {
+        text(ctx, 'RIGHT', S([d.wing.x + d.wing.sweep + d.wing.tipChord / 2, d.wing.semiSpan, 0])[0], S([0, d.wing.semiSpan, 0])[1] - 10, C.dim, 'center', 10);
+        text(ctx, 'NOSE', o0[0] - 6, o0[1], C.dim, 'right', 10);
+      }
+      if (o.v.id === 'dSide') {
+        var yR = h - 12, L = d.fuselage.length;
+        var a0 = S([0, 0, 0])[0], a1 = S([L, 0, 0])[0];
+        ctx.strokeStyle = C.dim; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a0, yR); ctx.lineTo(a1, yR); ctx.stroke();
+        var tick = L > 500 ? 50 : 10, big = L > 500 ? 100 : 50;
+        for (var mm = 0; mm <= L + 0.1; mm += tick) {
+          var xx = S([mm, 0, 0])[0], bg = mm % big === 0;
+          ctx.beginPath(); ctx.moveTo(xx, yR); ctx.lineTo(xx, yR - (bg ? 6 : 3)); ctx.stroke();
+          if (bg) text(ctx, String(mm), xx, yR - 10, C.dim, 'center', 9);
+        }
+        text(ctx, 'mm from nose', a1 + 6, yR - 4, C.dim, 'left', 9);
+      }
+      if (o.v.id === 'dRear') text(ctx, 'RIGHT →', w - 8, h - 12, C.dim, 'right', 10);
+    });
+    $('dTop').querySelector('.vlabel').textContent = 'TOP VIEW   ·   GRID SQUARE = ' + gridMM + ' mm';
+  }
+
+  function renderReadouts() {
+    var an = state.an, d = state.design;
+    if (!an) return;
+    var mp = an.mp, g = an.geo, smPct = an.sm * 100;
+    var foam = g.parts.wing + g.parts.spar + g.parts.fuselage + g.parts.hstab + g.parts.vstab + g.parts.canard + g.parts.winglets;
+    var stab = smPct < 0 ? '<span class="tag badc">UNSTABLE</span>' : (smPct < 5 ? '<span class="tag warn">MARGINAL</span>' : (smPct > 35 ? '<span class="tag warn">NOSE-HEAVY</span>' : '<span class="tag good">STABLE</span>'));
+    function band(v, lo, hi, n) { var c = v < lo ? 'warn' : (v > hi * 1.5 ? 'warn' : 'good'); return '<span class="' + c + '">' + fmt(v, n) + '</span>'; }
+    var rows = [
+      ['Mass', fmt(mp.mass * 1000, 1) + ' g'],
+      ['  foam board', fmt(foam, 1) + ' g'],
+      ['  hot glue' + (d.glue.mode === 'auto' ? ' (estimate)' : ''), fmt(g.glueMass, 1) + ' g'],
+      ['  tape / ballast', fmt(g.tapeMass, 1) + ' g / ' + fmt(g.ballastMass, 1) + ' g'],
+      ['Center of gravity (CG)', fmt(mp.cg[0], 1) + ' mm from nose'],
+      ['Neutral point (NP)', fmt(an.npX, 1) + ' mm from nose'],
+      ['Static margin', fmt(smPct, 1) + ' %' + stab],
+      ['Wingspan', fmt(g.span, 0) + ' mm'],
+      ['Wing area', fmt(g.wingArea / 1e4, 1) + ' dm²'],
+      ['Aspect ratio', fmt(g.wingAR, 2)],
+      ['Mean wing chord', fmt(g.mac, 1) + ' mm'],
+      ['Wing loading', fmt(an.wingLoading, 1) + ' g/dm²'],
+      ['Horizontal tail volume', band(an.Vh, 0.35, 0.6, 2) + ' <span class="k">(0.35–0.60)</span>'],
+      ['Vertical tail volume', band(an.Vv, 0.02, 0.04, 3) + ' <span class="k">(0.02–0.04)</span>'],
+      ['Balanced angle of attack', an.trim ? fmt(an.trim.alpha, 1) + '°' : '<span class="badc">none</span>'],
+      ['Steady glide speed', an.trimSpeed ? fmt(an.trimSpeed, 2) + ' m/s' : '—'],
+      ['Glide ratio', an.glideRatio ? fmt(an.glideRatio, 1) + ' : 1' : '—'],
+      ['Sink rate', an.sinkRate ? fmt(an.sinkRate, 2) + ' m/s' : '—'],
+      ['Reynolds number', an.Re ? Math.round(an.Re / 1000) + ' 000' : '—'],
+      ['Roll stability (dihedral)', an.Clb < -0.0002 ? '<span class="good">Stable</span>' : '<span class="warn">Weak</span>'],
+      ['Yaw stability', an.Cnb > 0.0002 ? '<span class="good">Stable</span>' : '<span class="warn">Weak</span>'],
+      ['Foam board sheets', String(an.layout.sheets.length)]
+    ];
+    if (g.canard) rows.splice(rows.length - 1, 0, ['Canard area', fmt(g.canard.Sc / 100, 1) + ' cm² <span class="k">(' + fmt(100 * g.canard.Sc / g.wingArea, 0) + ' % of wing)</span>']);
+    if (g.winglets) rows.splice(rows.length - 1, 0, ['Winglets', fmt(g.winglets.height, 0) + ' mm tall, +' + fmt(g.winglets.spanGain, 0) + ' mm effective span']);
+    var h = '<h2>ANALYSIS</h2><div class="ro">';
+    rows.forEach(function (r) { h += '<span class="k">' + r[0].replace(/^  /, '&nbsp;&nbsp;') + '</span><span class="v">' + r[1] + '</span>'; });
+    h += '</div>';
+    h += '<div class="legend"><span><span style="color:#e9ffef">◐</span> CG = center of gravity (balance point)</span><span><span style="color:#ffb000">◎</span> NP = neutral point</span></div>';
+    h += '<div class="note" style="margin-top:4px">Stable flight needs the CG ahead of the NP. The NP includes the wing downwash that reaches the stabilizer. Static margin = distance from CG to NP divided by the mean wing chord; 5–15 % is a good target. Tail volume compares the size and distance of each tail surface with the wing. Canard and winglet effects are estimates: check them with test flights.</div>';
+    h += '<h2 style="margin-top:8px">CHECKS</h2>';
+    if (an.warnings.length) {
+      h += '<ul class="warnlist">';
+      an.warnings.forEach(function (w) {
+        var cls = w.level === 'bad' ? 'badc' : (w.level === 'warn' ? 'warn' : 'info');
+        h += '<li class="' + cls + '">' + (w.level === 'bad' ? '✖ ' : (w.level === 'warn' ? '▲ ' : '● ')) + esc(w.text) + '</li>';
+      });
+      h += '</ul>';
+    } else h += '<div class="good">● All checks passed.</div>';
+    $('readouts').innerHTML = h;
+  }
+
+  /* =====================================================================
+     FLIGHT SCREEN
+     ===================================================================== */
+  var FVIEWS = [
+    { id: 'vSide', name: 'SIDE VIEW', proj: function (x, y, h) { return [x, -h]; } },
+    { id: 'vTop', name: 'TOP VIEW', proj: function (x, y, h) { return [x, y]; } },
+    { id: 'vRear', name: 'REAR VIEW', proj: function (x, y, h) { return [y, -h]; } }
+  ];
+  var fcache = null;   // static backgrounds for replay
+
+  function launch() {
+    var b = $('btnLaunch');
+    if (b) { b.disabled = true; b.textContent = 'CALCULATING…'; }
+    stopReplay();
+    setTimeout(function () {
+      try { state.sim = P.simulate(state.design); }
+      catch (e) { state.sim = null; toast('The flight could not be calculated: ' + e.message); }
+      if (b) { b.disabled = false; b.textContent = 'LAUNCH'; }
+      renderAside();
+      renderResults();
+      if (state.sim) startReplay();
+    }, 30);
+  }
+
+  function planeOutlineWorld(rec, scale) {
+    var geo = state.an.geo, cgB = state.an.mp.cgB;
+    return geo.lines.map(function (ln) {
+      return {
+        kind: ln.kind, closed: !!ln.closed,
+        pts: ln.pts.map(function (p) {
+          var b = P.d2b(p); b = [(b[0] - cgB[0]) * scale, (b[1] - cgB[1]) * scale, (b[2] - cgB[2]) * scale];
+          var wv = P.qrot(rec.q, b);
+          return [rec.x + wv[0], rec.y + wv[1], rec.h - wv[2]];
+        })
+      };
+    });
+  }
+
+  function buildFlightCache() {
+    var sim = state.sim;
+    var recs = sim ? sim.records : [{ x: 0, y: 0, h: state.design.launch.height }];
+    var maxX = 1, minX = 0, maxH = state.design.launch.height + 0.3, maxY = 0.5;
+    recs.forEach(function (r) { maxX = Math.max(maxX, r.x); minX = Math.min(minX, r.x); maxH = Math.max(maxH, r.h); maxY = Math.max(maxY, Math.abs(r.y)); });
+    var margin = 0.45 * state.planeScale + 0.3;
+    var box = { x0: minX - margin, x1: maxX + margin, y0: -maxY - margin, y1: maxY + margin, h0: 0, h1: maxH + margin };
+    fcache = { views: [] };
+    FVIEWS.forEach(function (v) {
+      var cv = $(v.id).querySelector('canvas');
+      var pr = prepCanvas(cv);
+      var u0, u1, w0, w1;  // screen-axis ranges in meters
+      if (v.id === 'vSide') { u0 = box.x0; u1 = box.x1; w0 = -box.h1; w1 = -box.h0; }
+      else if (v.id === 'vTop') { u0 = box.x0; u1 = box.x1; w0 = box.y0; w1 = box.y1; }
+      else { u0 = box.y0; u1 = box.y1; w0 = -box.h1; w1 = -box.h0; }
+      var pad = 22;
+      var s = Math.min((pr.w - 2 * pad) / (u1 - u0), (pr.h - 2 * pad) / (w1 - w0));
+      var ox = pr.w / 2 - (u0 + u1) / 2 * s, oy = pr.h / 2 - (w0 + w1) / 2 * s;
+      function S(x, y, h) { var q = v.proj(x, y, h); return [ox + q[0] * s, oy + q[1] * s]; }
+      var ctx = pr.ctx;
+      // 1 m grid
+      var gm = s >= 30 ? 1 : (s >= 6 ? 5 : 10);
+      ctx.lineWidth = 1;
+      var uStart = Math.floor(u0 / gm) * gm, wStart = Math.floor(w0 / gm) * gm;
+      for (var u = uStart; u <= u1 + 1e-6; u += gm) { var X = ox + u * s; ctx.strokeStyle = Math.abs(u) < 1e-6 ? C.faint : C.grid; ctx.beginPath(); ctx.moveTo(X, 0); ctx.lineTo(X, pr.h); ctx.stroke(); text(ctx, String(Math.round(u)), X + 2, pr.h - 8, C.dim, 'left', 9); }
+      for (var ww = wStart; ww <= w1 + 1e-6; ww += gm) { var Y = oy + ww * s; ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(0, Y); ctx.lineTo(pr.w, Y); ctx.stroke(); if (Math.abs(ww) > 1e-6) text(ctx, String(Math.round(Math.abs(ww))), 3, Y - 6, C.dim, 'left', 9); }
+      // ground line
+      if (v.id !== 'vTop') { var g = S(0, 0, 0)[1]; vline(ctx, [[0, g], [pr.w, g]], C.dim, 1.2, false, false); text(ctx, 'GROUND', pr.w - 6, g + 9, C.dim, 'right', 9); }
+      else { var c0 = S(0, 0, 0); ctx.setLineDash([4, 6]); vline(ctx, [[0, c0[1]], [pr.w, c0[1]]], C.faint, 1, false, false); ctx.setLineDash([]); text(ctx, 'LAUNCH LINE', pr.w - 6, c0[1] - 8, C.dim, 'right', 9); }
+      text(ctx, 'grid = ' + gm + ' m', pr.w - 6, 10, C.dim, 'right', 9);
+      // launch point
+      var lp = S(0, 0, state.design.launch.height);
+      ctx.strokeStyle = C.cyan; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lp[0] - 5, lp[1]); ctx.lineTo(lp[0] + 5, lp[1]); ctx.moveTo(lp[0], lp[1] - 5); ctx.lineTo(lp[0], lp[1] + 5); ctx.stroke();
+      // full path, dim
+      if (sim) {
+        vline(ctx, recs.map(function (r) { return S(r.x, r.y, r.h); }), C.faint, 1.2, false, false);
+        var last = recs[recs.length - 1], lpnt = S(last.x, last.y, Math.max(last.h, 0));
+        ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(lpnt[0] - 5, lpnt[1] - 5); ctx.lineTo(lpnt[0] + 5, lpnt[1] + 5); ctx.moveTo(lpnt[0] + 5, lpnt[1] - 5); ctx.lineTo(lpnt[0] - 5, lpnt[1] + 5); ctx.stroke();
+      }
+      var bg = document.createElement('canvas');
+      bg.width = cv.width; bg.height = cv.height;
+      bg.getContext('2d').drawImage(cv, 0, 0);
+      fcache.views.push({ v: v, cv: cv, bg: bg, S: S, w: pr.w, h: pr.h });
+    });
+  }
+
+  function drawFlightFrame(idx) {
+    if (state.tab !== 'flight' || !state.an) return;
+    if (!fcache) buildFlightCache();
+    var sim = state.sim;
+    var recs = sim ? sim.records : null;
+    if (recs && (idx === undefined || !recs[idx])) idx = recs.length - 1;
+    var rec = recs ? recs[idx] : { x: 0, y: 0, h: state.design.launch.height, q: [Math.cos(state.design.launch.angle * DEG / 2), 0, Math.sin(state.design.launch.angle * DEG / 2), 0], t: 0, speed: state.design.launch.speed, alpha: 0 };
+    var outline = planeOutlineWorld(rec, state.planeScale);
+    fcache.views.forEach(function (fv) {
+      var ctx = fv.cv.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(fv.bg, 0, 0);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      if (recs) {
+        var trace = [];
+        for (var i = 0; i <= idx; i++) trace.push(fv.S(recs[i].x, recs[i].y, recs[i].h));
+        vline(ctx, trace, C.cyan, 1.3, false);
+      }
+      outline.forEach(function (ln) { vline(ctx, ln.pts.map(function (p) { return fv.S(p[0], p[1], p[2]); }), C.line, 1.3, ln.closed); });
+      if (fv.v.id === 'vSide') {
+        var s = 't ' + fmt(rec.t, 2) + ' s   height ' + fmt(rec.h, 2) + ' m   speed ' + fmt(rec.speed, 2) + ' m/s   angle of attack ' + fmt(rec.alpha, 1) + '°';
+        text(ctx, s, 110, 9, C.white, 'left', 11);
+      }
+    });
+    drawChart(idx);
+  }
+
+  function startReplay() {
+    stopReplay();
+    fcache = null;
+    buildFlightCache();
+    var simRef = state.sim, recs = simRef.records, T = recs[recs.length - 1].t;
+    var start = performance.now();
+    state.play = { raf: 0 };
+    function frame(now) {
+      if (state.sim !== simRef || state.tab !== 'flight') { state.play = null; return; }
+      var t = (now - start) / 1000 * state.playSpeed;
+      var idx = recs.length - 1;
+      if (t < T) { idx = Math.min(recs.length - 1, Math.round(t * 60)); while (idx > 0 && recs[idx].t > t) idx--; }
+      drawFlightFrame(idx);
+      if (t < T && state.play) state.play.raf = requestAnimationFrame(frame);
+      else state.play = null;
+    }
+    state.play.raf = requestAnimationFrame(frame);
+  }
+  function stopReplay() { if (state.play) { cancelAnimationFrame(state.play.raf); state.play = null; } }
+
+  function renderResults() {
+    var r = $('results'), sim = state.sim, an = state.an;
+    if (!sim) {
+      r.innerHTML = '<h2>FLIGHT RESULTS</h2><div class="note">Set the launch conditions on the left and press <b>LAUNCH</b>.</div>' +
+        '<h2 style="margin-top:10px">DESIGN SUMMARY</h2><div class="ro">' +
+        '<span class="k">Mass</span><span class="v">' + fmt(an.mp.mass * 1000, 2) + ' g</span>' +
+        '<span class="k">Static margin</span><span class="v">' + fmt(an.sm * 100, 1) + ' %</span>' +
+        '<span class="k">Steady glide speed</span><span class="v">' + (an.trimSpeed ? fmt(an.trimSpeed, 2) + ' m/s' : '—') + '</span>' +
+        '<span class="k">Glide ratio</span><span class="v">' + (an.glideRatio ? fmt(an.glideRatio, 1) + ' : 1' : '—') + '</span></div>' +
+        (an.trimSpeed ? '<div class="note" style="margin-top:6px">Tip: a launch speed close to the steady glide speed gives the smoothest glide. A faster throw makes the glider climb first.</div>' : '');
+      fcache = null;
+      return;
+    }
+    var side = sim.lateral < -0.05 ? ' left' : (sim.lateral > 0.05 ? ' right' : '');
+    var h = '<h2>FLIGHT RESULTS</h2><div class="ro">' +
+      '<span class="k">Time aloft</span><span class="v">' + fmt(sim.timeAloft, 2) + ' s</span>' +
+      '<span class="k">Distance</span><span class="v">' + fmt(sim.distance, 2) + ' m</span>' +
+      '<span class="k">&nbsp;&nbsp;downrange</span><span class="v">' + fmt(sim.downrange, 2) + ' m</span>' +
+      '<span class="k">&nbsp;&nbsp;sideways</span><span class="v">' + fmt(Math.abs(sim.lateral), 2) + ' m' + side + '</span>' +
+      '<span class="k">Max height</span><span class="v">' + fmt(sim.maxHeight, 2) + ' m</span>' +
+      '<span class="k">Max speed</span><span class="v">' + fmt(sim.maxSpeed, 2) + ' m/s</span>' +
+      '<span class="k">Landing speed</span><span class="v">' + fmt(sim.landingSpeed, 2) + ' m/s</span>' +
+      '<span class="k">Landing angle</span><span class="v">' + fmt(Math.abs(sim.landingAngle), 0) + '° down</span>' +
+      '</div><h2 style="margin-top:8px">HOW IT FLEW</h2>';
+    sim.behavior.text.forEach(function (t) { h += '<div class="' + (sim.behavior.key === 'glide' ? 'good' : 'warn') + '" style="margin:3px 0;line-height:1.3">' + esc(t) + '</div>'; });
+    if (sim.ended === 'time') h += '<div class="info">The calculation stopped at 60 s of flight.</div>';
+    if (sim.ended === 'range') h += '<div class="info">The calculation stopped because the glider left the 1000 m test area.</div>';
+    h += '<canvas id="chart"></canvas><div class="legend"><span class="good">— height (m)</span><span style="color:#46d9ff">— speed (m/s)</span></div>';
+    h += '<div class="note" style="margin-top:6px">The simulator predicts trends. Real foam board flexes, builds are never perfect, and every throw is different, so measured flights will vary. Compare them on the TEST FLIGHTS screen.</div>';
+    r.innerHTML = h;
+  }
+
+  function drawChart(idx) {
+    var cv = $('chart'); if (!cv || !state.sim) return;
+    var pr = prepCanvas(cv), ctx = pr.ctx, w = pr.w, hh = pr.h;
+    var recs = state.sim.records, T = Math.max(recs[recs.length - 1].t, 0.1);
+    var maxH = 0.1, maxV = 0.1;
+    recs.forEach(function (r) { maxH = Math.max(maxH, r.h); maxV = Math.max(maxV, r.speed); });
+    var l = 26, rr = 26, t0 = 6, b = 16;
+    function X(t) { return l + (w - l - rr) * t / T; }
+    ctx.strokeStyle = C.faint; ctx.lineWidth = 1; ctx.strokeRect(l, t0, w - l - rr, hh - t0 - b);
+    vline(ctx, recs.map(function (r) { return [X(r.t), hh - b - (hh - t0 - b) * r.h / maxH]; }), C.line, 1.2, false, false);
+    vline(ctx, recs.map(function (r) { return [X(r.t), hh - b - (hh - t0 - b) * r.speed / maxV]; }), C.cyan, 1.2, false, false);
+    text(ctx, fmt(maxH, 1), l - 3, t0 + 4, C.line, 'right', 9);
+    text(ctx, fmt(maxV, 1), w - rr + 3, t0 + 4, C.cyan, 'left', 9);
+    text(ctx, '0', l, hh - 7, C.dim, 'center', 9);
+    text(ctx, fmt(T, 1) + ' s', w - rr, hh - 7, C.dim, 'center', 9);
+    if (idx !== undefined && recs[idx]) { var xx = X(recs[idx].t); ctx.strokeStyle = C.white; ctx.beginPath(); ctx.moveTo(xx, t0); ctx.lineTo(xx, hh - b); ctx.stroke(); }
+  }
+
+  /* =====================================================================
+     CUTTING TEMPLATE: parts packed on foam board sheets, printed full size
+     across US Letter pages that overlap and tape together.
+     ===================================================================== */
+  var PAGE = { W: 215.9, H: 279.4, M: 8, OV: 12 };
+  PAGE.PW = PAGE.W - 2 * PAGE.M; PAGE.PH = PAGE.H - 2 * PAGE.M;
+  PAGE.SX = PAGE.PW - PAGE.OV; PAGE.SY = PAGE.PH - PAGE.OV;
+  var ROWS = 'ABCDEFGHIJ';
+  var LSTYLE = {
+    cut: 'stroke="#000" stroke-width="0.45" fill="none"',
+    score: 'stroke="#000" stroke-width="0.35" stroke-dasharray="4 1.5" fill="none"',
+    light: 'stroke="#555" stroke-width="0.25" stroke-dasharray="1 1.5" fill="none"',
+    fold: 'stroke="#000" stroke-width="0.35" stroke-dasharray="6 2 1 2" fill="none"',
+    mark: 'stroke="#777" stroke-width="0.3" stroke-dasharray="0.6 1.2" fill="none"',
+    balance: 'stroke="#000" stroke-width="0.6" fill="none"'
+  };
+
+  function tilesForSheet(sheet, lay) {
+    var cols = Math.max(1, Math.ceil((lay.sheetW - PAGE.OV) / PAGE.SX));
+    var rows = Math.max(1, Math.ceil((lay.sheetH - PAGE.OV) / PAGE.SY));
+    var tiles = [];
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var x0 = c * PAGE.SX, y0 = r * PAGE.SY;
+      var used = sheet.items.some(function (it) { return it.x < x0 + PAGE.PW && it.x + it.w > x0 && it.y < y0 + PAGE.PH && it.y + it.h > y0; });
+      tiles.push({ r: r, c: c, x0: x0, y0: y0, id: ROWS[r] + (c + 1), used: used });
+    }
+    return { tiles: tiles, rows: rows, cols: cols };
+  }
+
+  function polyStr(pts) { return pts.map(function (q) { return q[0].toFixed(2) + ',' + q[1].toFixed(2); }).join(' '); }
+  function svgText(x, y, s, size, rot, color, anchor, weight) {
+    return '<text x="' + x.toFixed(2) + '" y="' + y.toFixed(2) + '" font-size="' + size + '" fill="' + (color || '#000') + '" text-anchor="' + (anchor || 'middle') + '" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif"' + (weight ? ' font-weight="' + weight + '"' : '') + (rot ? ' transform="rotate(' + rot + ' ' + x.toFixed(2) + ' ' + y.toFixed(2) + ')"' : '') + '>' + esc(s) + '</text>';
+  }
+
+  /* everything on one sheet, in sheet millimeters */
+  function sheetContent(sheet, lay, opts) {
+    opts = opts || {};
+    var s = [];
+    if (opts.grid) {
+      for (var gx = 0; gx <= lay.sheetW + 0.1; gx += 50) s.push('<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="' + lay.sheetH + '" stroke="' + (gx % 100 === 0 ? '#c8c8c8' : '#e2e2e2') + '" stroke-width="0.25"/>');
+      for (var gy = 0; gy <= lay.sheetH + 0.1; gy += 50) s.push('<line x1="0" y1="' + gy + '" x2="' + lay.sheetW + '" y2="' + gy + '" stroke="' + (gy % 100 === 0 ? '#c8c8c8' : '#e2e2e2') + '" stroke-width="0.25"/>');
+      // grid coordinates every 100 mm help line the pages up
+      for (var ax = 100; ax < lay.sheetW; ax += 100) for (var ay = 100; ay < lay.sheetH; ay += 100) s.push(svgText(ax + 1.5, ay - 2, (ax / 100) + '·' + (ay / 100), 2.4, 0, '#aaa', 'start'));
+    }
+    s.push('<rect x="0" y="0" width="' + lay.sheetW + '" height="' + lay.sheetH + '" fill="none" stroke="#999" stroke-width="0.4" stroke-dasharray="3 3"/>');
+    sheet.items.forEach(function (it) {
+      var p = it.part, rot = it.rot ? 90 : 0;
+      s.push('<polygon points="' + polyStr(p.outline.map(it.map)) + '" ' + LSTYLE.cut + '/>');
+      if (opts.simple) { var cc = it.map([p.w / 2, p.h / 2]); s.push(svgText(cc[0], cc[1], p.name + (p.qty > 1 ? ' ' + it.copy : ''), opts.labelSize || 14, 0, '#333')); return; }
+      p.lines.forEach(function (l) {
+        var pts = l.pts.map(it.map);
+        s.push('<polyline points="' + polyStr(pts) + '" ' + (LSTYLE[l.type] || LSTYLE.mark) + '/>');
+        if (l.type === 'balance') {
+          var b = pts[0]; s.push('<circle cx="' + b[0].toFixed(2) + '" cy="' + b[1].toFixed(2) + '" r="1.6" fill="#000"/>');
+        }
+        if (l.label) {
+          var a = pts[0], z = pts[pts.length - 1];
+          var mid = pts.length > 2 ? pts[Math.floor(pts.length / 2)] : [(a[0] + z[0]) / 2, (a[1] + z[1]) / 2];
+          var ang = Math.atan2(z[1] - a[1], z[0] - a[0]) * 180 / Math.PI;
+          if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+          var len = Math.hypot(z[0] - a[0], z[1] - a[1]);
+          if (len < 12) ang = 0;
+          var nx = -Math.sin(ang * Math.PI / 180) * 2.4, ny = Math.cos(ang * Math.PI / 180) * 2.4;
+          s.push(svgText(mid[0] + nx, mid[1] + ny, l.label, 2.4, ang, '#000'));
+        }
+      });
+      p.labels.forEach(function (lb) {
+        var q = it.map([lb.u, lb.v]);
+        s.push(svgText(q[0], q[1], lb.text, lb.size || 4, ((lb.rot || 0) + rot) % 360, '#444'));
+      });
+    });
+    return s.join('');
+  }
+
+  function renderTemplatePanel(a) {
+    var an = state.an, lay = an.layout;
+    a.appendChild(el('h2', null, 'PRINTING'));
+    var pages = 0;
+    lay.sheets.forEach(function (sh) { pages += tilesForSheet(sh, lay).tiles.filter(function (t) { return t.used; }).length; });
+    a.appendChild(el('div', { class: 'ro' },
+      '<span class="k">Foam board sheets</span><span class="v">' + lay.sheets.length + '</span>' +
+      '<span class="k">Pattern pages</span><span class="v">' + pages + '</span>' +
+      '<span class="k">Instruction pages</span><span class="v">2</span>' +
+      '<span class="k">Paper</span><span class="v">US Letter</span>'));
+    if (lay.unplaced.length) a.appendChild(el('div', { class: 'badc', style: 'margin:6px 0' }, '✖ Too large for one sheet: ' + esc(lay.unplaced.join(', ')) + '. These parts are left off the template.'));
+    var b = el('button', { class: 'primary bigbtn' }, 'PRINT TEMPLATE');
+    b.addEventListener('click', printTemplate);
+    a.appendChild(b);
+    a.appendChild(el('div', { class: 'note' }, 'In the print window, set the scale to <b>Actual size</b> or <b>100%</b> (not "Fit to page"). Measure the 100 mm line on page 1 to check.'));
+    a.appendChild(el('h2', { style: 'margin-top:10px' }, 'FOAM BOARD'));
+    var boardPart = PARTS.filter(function (x) { return x.id === 'board'; })[0];
+    boardPart.fields.forEach(function (f) { a.appendChild(fieldRow(f, function () { changed(); })); });
+  }
+
+  function legendHTML() {
+    function sw(style) { return '<svg width="14mm" height="3mm" viewBox="0 0 14 3"><line x1="0" y1="1.5" x2="14" y2="1.5" ' + style.replace('fill="none"', '') + '/></svg>'; }
+    return '<div class="legend2">' +
+      '<span>' + sw(LSTYLE.cut) + ' cut through</span>' +
+      '<span>' + sw(LSTYLE.score) + ' hinge score: cut the top paper and foam, not the bottom paper</span>' +
+      '<span>' + sw(LSTYLE.light) + ' light score: top paper only</span>' +
+      '<span>' + sw(LSTYLE.fold) + ' leading-edge fold</span>' +
+      '<span>' + sw(LSTYLE.mark) + ' pencil guide for gluing</span></div>';
+  }
+
+  function mapSVG(sheet, idx, lay, widthMM, forPreview) {
+    var t = tilesForSheet(sheet, lay);
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" ' + (forPreview ? 'width="100%"' : 'width="' + widthMM + 'mm"') + ' viewBox="-4 -14 ' + (lay.sheetW + 8) + ' ' + (lay.sheetH + 18) + '">';
+    s += '<rect x="-4" y="-14" width="' + (lay.sheetW + 8) + '" height="' + (lay.sheetH + 18) + '" fill="#fff"/>';
+    s += svgText(0, -7, 'SHEET ' + (idx + 1) + ' of ' + lay.sheets.length + ' · ' + Math.round(lay.sheetW) + ' × ' + Math.round(lay.sheetH) + ' mm foam board', 12, 0, '#000', 'start', 'bold');
+    s += sheetContent(sheet, lay, { simple: true, labelSize: 16 });
+    t.tiles.forEach(function (tl) {
+      if (!tl.used) return;
+      s += '<rect x="' + tl.x0 + '" y="' + tl.y0 + '" width="' + PAGE.PW + '" height="' + PAGE.PH + '" fill="none" stroke="#2a6" stroke-width="1.2" stroke-dasharray="6 4"/>';
+      s += svgText(tl.x0 + 14, tl.y0 + 14, tl.id, 13, 0, '#2a6', 'middle', 'bold');
+    });
+    s += '</svg>';
+    return s;
+  }
+
+  function buildSteps() {
+    var d = state.design, an = state.an, g = an.geo, steps = [];
+    steps.push('Print every page at <b>Actual size (100%)</b>. Measure the 100 mm line on this page.');
+    steps.push('For each sheet, lay the pages out as shown on the map. Overlap neighboring pages by about 12 mm so the gray grid lines and grid numbers match, then tape the pages together.');
+    steps.push('Tape the pattern onto the foam board. With a sharp hobby knife and a metal ruler, cut through the paper and board along every <b>solid line</b>. Cut on a cutting mat, keep your fingers behind the blade, and make several light passes instead of one hard pass.');
+    steps.push('<b>Hinge scores</b> (elevator and rudder): cut through the top paper and the foam but <b>not the bottom paper</b>, then bend the surface gently so it hinges on the bottom paper.');
+    if (g.folded) {
+      steps.push('<b>Folded airfoil wing:</b> on each wing piece, cut through the top paper on both <b>leading-edge fold</b> lines and peel out the strip of foam between them, leaving the bottom paper. Make the <b>light scores</b> (top paper only) on the top-surface section.');
+      steps.push('Hot-glue the <b>spar</b> on its pencil line, standing on edge (' + fmt(g.sparH, 1) + ' mm tall). Fold the top surface back over the spar so it curves, and glue it to the spar and to the back edge of the wing. The finished airfoil is about ' + fmt(g.T, 0) + ' mm thick.');
+    }
+    if (Math.abs(d.wing.dihedral) > 0.1) steps.push('<b>Dihedral:</b> bevel the root edge of each wing half slightly, then hot-glue the halves together with each tip raised ' + d.wing.dihedral + '° (use the dihedral gauge). Hold the joint until the glue sets.');
+    else if (an.layout.parts.some(function (p) { return p.id === 'wingR'; })) steps.push('Hot-glue the two wing halves together flat.');
+    if (d.fuselage.layers > 1) steps.push('Glue the ' + d.fuselage.layers + ' fuselage layers together, edges matched.');
+    steps.push('Hot-glue the wing on the top edge of the fuselage at the <b>WING</b> mark' + (Math.abs(d.wing.incidence) > 0.05 ? ' (the seat is already cut at ' + d.wing.incidence + '°)' : '') + '. Check from the front that the wing is square to the fuselage.');
+    steps.push('Glue the stabilizer on the fuselage at the <b>STABILIZER</b> mark, square to the fuselage. Glue the fin upright on the stabilizer center line, with its front edge ' + d.vstab.x + ' mm from the nose.');
+    if (d.canard.enabled) steps.push('Glue the <b>canard</b> on the fuselage at the <b>CANARD</b> mark, square to the fuselage' + (Math.abs(d.canard.incidence) > 0.05 ? ' (the seat is already cut at ' + d.canard.incidence + '°, front edge up)' : '') + '. Its front edge is ' + d.canard.x + ' mm from the nose. Check from the front that it is level with the wing.');
+    if (d.winglets.enabled) steps.push('Glue one <b>winglet</b> on each wing tip, standing ' + (d.winglets.cant > 0.05 ? 'leaning outward ' + d.winglets.cant + '° from vertical (winglet gauge)' : 'straight up') + ', with its back edge level with the back edge of the wing tip. Make sure both winglets match.');
+    if (d.hstab.elevChord > 0) steps.push(Math.abs(d.hstab.elevUp) > 0.05 ? 'Bend the elevator ' + (d.hstab.elevUp >= 0 ? 'up ' : 'down ') + Math.abs(d.hstab.elevUp) + '° (elevator gauge).' : 'Leave the elevator straight, in line with the stabilizer.');
+    if (d.vstab.rudderChord > 0 && Math.abs(d.vstab.rudderRight) > 0.05) steps.push('Bend the rudder ' + Math.abs(d.vstab.rudderRight) + '° to the ' + (d.vstab.rudderRight > 0 ? 'right' : 'left') + ' (rudder gauge).');
+    var bl = d.ballast.filter(function (b) { return b.count * b.mass > 0; });
+    if (bl.length) steps.push('Attach the ballast to the sides of the nose at the BALLAST marks: ' + bl.map(function (b) { return b.count + ' × ' + esc(b.name) + ' at ' + b.x + ' mm'; }).join('; ') + '.');
+    if (d.tape.length > 0) steps.push('Apply about ' + d.tape.length + ' cm of tape (leading edges and nose).');
+    steps.push('<b>Balance check:</b> hold one fingertip under each wing, next to the fuselage, at the <b>BALANCE POINT</b> distance (' + fmt(an.mp.cg[0], 0) + ' mm from the nose; it is marked on the fuselage). The glider should hang level. If the nose drops, remove a little ballast; if the tail drops, add ballast.');
+    steps.push('Test-glide with a gentle, level toss over grass or a gym floor. Record each flight on the TEST FLIGHTS screen.');
+    return steps;
+  }
+
+  function gaugeSVG(deg, title, sub, Lmm) {
+    var L = Lmm || 45, a = Math.abs(deg) * DEG, w = L + 15, h = Math.max(16, L * Math.sin(a) + 12);
+    var x0 = 6, y0 = h - 6, x1 = x0 + L * Math.cos(a), y1 = y0 - L * Math.sin(a);
+    var arc = 'M ' + (x0 + 14) + ' ' + y0 + ' A 14 14 0 0 0 ' + (x0 + 14 * Math.cos(a)).toFixed(2) + ' ' + (y0 - 14 * Math.sin(a)).toFixed(2);
+    return '<div class="gauge"><svg xmlns="http://www.w3.org/2000/svg" width="' + w + 'mm" height="' + h.toFixed(1) + 'mm" viewBox="0 0 ' + w + ' ' + h.toFixed(1) + '">' +
+      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (x0 + L + 6) + '" y2="' + y0 + '" stroke="#000" stroke-width="0.4"/>' +
+      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x1.toFixed(2) + '" y2="' + y1.toFixed(2) + '" stroke="#000" stroke-width="0.4"/>' +
+      '<path d="' + arc + '" stroke="#000" stroke-width="0.3" fill="none"/>' +
+      '<text x="' + (x0 + 18) + '" y="' + (y0 - 3) + '" font-size="3" font-family="Arial">' + Math.abs(deg) + '°</text>' +
+      '</svg><div class="gt">' + esc(title) + '</div><div class="gs">' + esc(sub) + '</div></div>';
+  }
+
+  var COVER_CSS = '.cv{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;position:relative}' +
+    '.cvin{position:absolute;left:12mm;top:11mm;right:12mm;bottom:10mm;overflow:hidden}' +
+    '.cvt{font-size:15pt;font-weight:bold;letter-spacing:1px}' +
+    '.cvs{font-size:9pt;margin-top:1.2mm}' +
+    '.legend2{display:flex;flex-wrap:wrap;gap:1mm 5mm;font-size:8.5pt;align-items:center;margin-top:2mm}' +
+    '.legend2 span{display:flex;align-items:center;gap:1.5mm}' +
+    '.maps{margin-top:2mm}.maps svg{display:block;margin-bottom:2mm;border:0.2mm solid #bbb}' +
+    '.gauges{display:flex;flex-wrap:wrap;gap:4mm;margin-top:2mm}' +
+    '.gauge{border:0.3mm solid #999;padding:1mm 2mm}' +
+    '.gt{font-size:9pt;font-weight:bold;margin-top:1mm}.gs{font-size:8pt}' +
+    '.steps{margin-top:3mm;font-size:9.3pt;line-height:1.33}.steps ol{margin:1mm 0 0 5mm;padding:0}.steps li{margin:1mm 0}';
+
+  function coverPages(forPrint) {
+    var d = state.design, an = state.an, lay = an.layout;
+    var size = forPrint ? 'width:' + PAGE.W + 'mm;height:' + (PAGE.H - 1) + 'mm;' : 'width:' + PAGE.W + 'mm;height:' + PAGE.H + 'mm;';
+    var pageList = lay.sheets.map(function (sh, i) {
+      return 'Sheet ' + (i + 1) + ': ' + tilesForSheet(sh, lay).tiles.filter(function (t) { return t.used; }).map(function (t) { return t.id; }).join(', ');
+    }).join(' &nbsp;·&nbsp; ');
+    // size the sheet maps so they all fit on the cover page
+    var nS = Math.max(1, lay.sheets.length), aspect = (lay.sheetH + 18) / (lay.sheetW + 8);
+    var mapW = Math.min(186, (175 - 3 * nS) / (aspect * nS));
+    var maps = lay.sheets.map(function (sh, i) { return mapSVG(sh, i, lay, mapW, false); }).join('');
+    var p1 = '<div class="cv" style="' + size + '"><div class="cvin">' +
+      '<div class="cvt">FOAM BOARD GLIDER · ' + esc(d.name || 'Untitled') + '</div>' +
+      '<div class="cvs">Designer: ' + esc(d.designer || '—') + ' &nbsp;·&nbsp; Printed ' + today() + ' &nbsp;·&nbsp; ' + lay.sheets.length + ' sheet' + (lay.sheets.length > 1 ? 's' : '') + ' of ' + Math.round(lay.sheetW) + ' × ' + Math.round(lay.sheetH) + ' × ' + d.board.thickness + ' mm foam board</div>' +
+      '<div class="cvs">Predicted mass ' + fmt(an.mp.mass * 1000, 0) + ' g &nbsp;·&nbsp; Balance point ' + fmt(an.mp.cg[0], 0) + ' mm from the nose &nbsp;·&nbsp; Static margin ' + fmt(an.sm * 100, 1) + ' %' + (an.trimSpeed ? ' &nbsp;·&nbsp; Glide speed ' + fmt(an.trimSpeed, 1) + ' m/s' : '') + '</div>' +
+      '<div style="margin-top:2mm"><svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="10mm" viewBox="0 0 110 10"><line x1="5" y1="6" x2="105" y2="6" stroke="#000" stroke-width="0.5"/><line x1="5" y1="3" x2="5" y2="9" stroke="#000" stroke-width="0.5"/><line x1="105" y1="3" x2="105" y2="9" stroke="#000" stroke-width="0.5"/><text x="55" y="3.6" font-size="3" text-anchor="middle" font-family="Arial">100 mm — measure this line to check the print scale</text></svg></div>' +
+      legendHTML() +
+      '<div class="cvs" style="margin-top:2mm"><b>Pattern pages to tape together</b> (green boxes on the maps): ' + pageList + '</div>' +
+      '<div class="maps">' + maps + '</div>' +
+      '</div></div>';
+    var g = gaugeSVG(d.wing.dihedral, 'Dihedral gauge', 'Each wing tip raised ' + d.wing.dihedral + '°');
+    if (d.hstab.elevChord > 0 && Math.abs(d.hstab.elevUp) > 0.05) g += gaugeSVG(d.hstab.elevUp, 'Elevator gauge', (d.hstab.elevUp >= 0 ? 'Bend up ' : 'Bend down ') + Math.abs(d.hstab.elevUp) + '°');
+    if (d.vstab.rudderChord > 0 && Math.abs(d.vstab.rudderRight) > 0.05) g += gaugeSVG(d.vstab.rudderRight, 'Rudder gauge', 'Bend ' + (d.vstab.rudderRight > 0 ? 'right ' : 'left ') + Math.abs(d.vstab.rudderRight) + '°');
+    if (d.winglets.enabled && d.winglets.cant > 0.05) g += gaugeSVG(90 - d.winglets.cant, 'Winglet gauge', 'Angle from the wing: ' + (90 - d.winglets.cant) + '° (cant ' + d.winglets.cant + '°)');
+    g += gaugeSVG(90, 'Square gauge', 'Fin to stabilizer, wing to fuselage', 28);
+    var p2 = '<div class="cv" style="' + size + '"><div class="cvin">' +
+      '<div class="cvt">BUILD STEPS · ' + esc(d.name || 'Untitled') + '</div>' +
+      '<div class="gauges">' + g + '</div>' +
+      '<div class="steps"><ol>' + buildSteps().map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol></div>' +
+      '</div></div>';
+    return [p1, p2];
+  }
+
+  function tilePageSVG(sheet, sIdx, lay, tl, t) {
+    var x0 = tl.x0, y0 = tl.y0, s = [];
+    s.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + PAGE.W + 'mm" height="' + PAGE.H + 'mm" viewBox="0 0 ' + PAGE.W + ' ' + PAGE.H + '">');
+    s.push('<rect width="' + PAGE.W + '" height="' + PAGE.H + '" fill="#fff"/>');
+    s.push('<svg x="' + PAGE.M + '" y="' + PAGE.M + '" width="' + PAGE.PW + '" height="' + PAGE.PH + '" viewBox="' + x0 + ' ' + y0 + ' ' + PAGE.PW + ' ' + PAGE.PH + '" overflow="hidden">');
+    s.push(sheetContent(sheet, lay, { grid: true }));
+    // overlap guides: where the next page to the right / below begins
+    if (tl.c < t.cols - 1) s.push('<line x1="' + (x0 + PAGE.SX) + '" y1="' + y0 + '" x2="' + (x0 + PAGE.SX) + '" y2="' + (y0 + PAGE.PH) + '" stroke="#6a6" stroke-width="0.3" stroke-dasharray="2 2"/>' + svgText(x0 + PAGE.SX + PAGE.OV / 2, y0 + PAGE.PH / 2, 'overlap · page ' + ROWS[tl.r] + (tl.c + 2) + ' goes here', 2.6, 90, '#6a6'));
+    if (tl.r < t.rows - 1) s.push('<line x1="' + x0 + '" y1="' + (y0 + PAGE.SY) + '" x2="' + (x0 + PAGE.PW) + '" y2="' + (y0 + PAGE.SY) + '" stroke="#6a6" stroke-width="0.3" stroke-dasharray="2 2"/>' + svgText(x0 + PAGE.PW / 2, y0 + PAGE.SY + PAGE.OV / 2, 'overlap · page ' + ROWS[tl.r + 1] + (tl.c + 1) + ' goes here', 2.6, 0, '#6a6'));
+    s.push('</svg>');
+    s.push('<rect x="' + PAGE.M + '" y="' + PAGE.M + '" width="' + PAGE.PW + '" height="' + PAGE.PH + '" fill="none" stroke="#bbb" stroke-width="0.25"/>');
+    s.push('<rect x="' + (PAGE.M + 1) + '" y="' + (PAGE.M + 1) + '" width="62" height="7" fill="#fff" stroke="#000" stroke-width="0.25"/>');
+    s.push(svgText(PAGE.M + 3, PAGE.M + 4.6, 'SHEET ' + (sIdx + 1) + ' · PAGE ' + tl.id + ' · ' + esc(state.design.name || ''), 3, 0, '#000', 'start', 'bold'));
+    s.push('</svg>');
+    return s.join('');
+  }
+
+  function renderTemplate() {
+    var an = state.an, lay = an.layout;
+    var prev = $('tplPreview');
+    prev.style.flexDirection = 'column'; prev.style.justifyContent = 'flex-start';
+    var h = '<div style="color:#1d7a38;font-size:11px;margin:4px">PARTS LAYOUT ON FOAM BOARD · green boxes are the Letter pages that print full size</div>';
+    lay.sheets.forEach(function (sh, i) { h += '<div style="width:96%;max-width:980px;margin-bottom:8px">' + mapSVG(sh, i, lay, 0, true) + '</div>'; });
+    if (lay.sheets.length && lay.sheets[0].items.length) {
+      var t0 = tilesForSheet(lay.sheets[0], lay), first = t0.tiles.filter(function (t) { return t.used; })[0];
+      h += '<div style="color:#1d7a38;font-size:11px;margin:6px 4px 4px">SAMPLE PATTERN PAGE · SHEET 1 · PAGE ' + first.id + '</div>';
+      h += '<div style="width:60%;max-width:520px;background:#fff">' + tilePageSVG(lay.sheets[0], 0, lay, first, t0).replace('width="' + PAGE.W + 'mm" height="' + PAGE.H + 'mm"', 'width="100%"') + '</div>';
+    }
+    prev.innerHTML = h;
+    var st = '<h2>BUILD STEPS</h2><ol>' + buildSteps().map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>';
+    $('tplSteps').innerHTML = st;
+  }
+
+  function printTemplate() {
+    var an = state.an, lay = an.layout;
+    $('pageStyle').textContent = '@page{size:' + PAGE.W + 'mm ' + PAGE.H + 'mm;margin:0}' + COVER_CSS +
+      '.tile{width:' + PAGE.W + 'mm;height:' + (PAGE.H - 1) + 'mm;overflow:hidden}.tile svg{display:block}';
+    var pages = coverPages(true).map(function (h) { return '<div class="page">' + h + '</div>'; });
+    lay.sheets.forEach(function (sh, i) {
+      var t = tilesForSheet(sh, lay);
+      t.tiles.forEach(function (tl) { if (tl.used) pages.push('<div class="page tile">' + tilePageSVG(sh, i, lay, tl, t) + '</div>'); });
+    });
+    $('printArea').innerHTML = pages.join('');
+    setTimeout(function () { window.print(); }, 60);
+  }
+
+  /* =====================================================================
+     TEST FLIGHTS
+     ===================================================================== */
+  function addTest() {
+    var dist = parseFloat($('t_dist').value), time = parseFloat($('t_time').value);
+    if (!isFinite(dist) && !isFinite(time)) { toast('Enter the measured distance or the time aloft.'); return; }
+    var sim;
+    try { sim = P.simulate(state.design); } catch (e) { sim = null; }
+    var L = state.design.launch;
+    state.design.tests.push({
+      date: $('t_date').value || today(), team: $('t_team').value.trim(),
+      distance: isFinite(dist) ? dist : null, time: isFinite(time) ? time : null,
+      behavior: $('t_beh').value, notes: $('t_notes').value.trim(),
+      predicted: sim ? { distance: +sim.distance.toFixed(3), time: +sim.timeAloft.toFixed(3), behavior: sim.behavior.key, launchSpeed: L.speed, launchAngle: L.angle, launchHeight: L.height } : null
+    });
+    autosave();
+    $('t_dist').value = ''; $('t_time').value = ''; $('t_notes').value = '';
+    renderTests();
+    toast('Test flight added.');
+  }
+  function pctDiff(m, p) { if (m == null || p == null || p === 0) return null; return (m - p) / p * 100; }
+  function renderTests() {
+    var tests = state.design.tests;
+    var h = '<table><thead><tr><th>#</th><th class="l">Date</th><th class="l">Thrower</th><th>Distance (m)<br>measured</th><th><br>predicted</th><th><br>difference</th><th>Time (s)<br>measured</th><th><br>predicted</th><th class="l">Flight type<br>measured</th><th class="l"><br>predicted</th><th></th></tr></thead><tbody>';
+    if (!tests.length) h += '<tr><td colspan="11" class="l" style="color:#1d7a38;padding:10px">No test flights yet. Fly the real glider, measure it, and add the results on the left.</td></tr>';
+    tests.forEach(function (t, i) {
+      var p = t.predicted || {};
+      var dd = pctDiff(t.distance, p.distance);
+      h += '<tr><td>' + (i + 1) + '</td><td class="l">' + esc(t.date) + '</td><td class="l">' + esc(t.team) + '</td>' +
+        '<td>' + fmt(t.distance, 2) + '</td><td>' + fmt(p.distance, 2) + '</td>' +
+        '<td>' + (dd === null ? '—' : (dd >= 0 ? '+' : '') + dd.toFixed(0) + ' %') + '</td>' +
+        '<td>' + fmt(t.time, 2) + '</td><td>' + fmt(p.time, 2) + '</td>' +
+        '<td class="l">' + esc(behaviorName(t.behavior)) + '</td><td class="l">' + esc(behaviorName(p.behavior)) + '</td>' +
+        '<td><button class="x" data-del="' + i + '" title="Delete this test flight">✕</button></td></tr>';
+      if (t.notes) h += '<tr><td></td><td colspan="10" class="l" style="color:#1d7a38">' + esc(t.notes) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    $('testTableWrap').innerHTML = h;
+    Array.prototype.forEach.call($('testTableWrap').querySelectorAll('[data-del]'), function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('Delete test flight ' + (+b.getAttribute('data-del') + 1) + '?')) return;
+        tests.splice(+b.getAttribute('data-del'), 1); autosave(); renderTests();
+      });
+    });
+    // summary
+    var md = [], pd = [], mt = [], pt = [], match = 0, nb = 0;
+    tests.forEach(function (t) {
+      var p = t.predicted || {};
+      if (t.distance != null && p.distance != null) { md.push(t.distance); pd.push(p.distance); }
+      if (t.time != null && p.time != null) { mt.push(t.time); pt.push(p.time); }
+      if (p.behavior) { nb++; if (p.behavior === t.behavior) match++; }
+    });
+    function avg(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+    var s = '<h2>COMPARISON</h2><div class="ro">' +
+      '<span class="k">Test flights</span><span class="v">' + tests.length + '</span>' +
+      '<span class="k">Average measured distance</span><span class="v">' + fmt(avg(md), 2) + ' m</span>' +
+      '<span class="k">Average predicted distance</span><span class="v">' + fmt(avg(pd), 2) + ' m</span>' +
+      '<span class="k">Average measured time</span><span class="v">' + fmt(avg(mt), 2) + ' s</span>' +
+      '<span class="k">Average predicted time</span><span class="v">' + fmt(avg(pt), 2) + ' s</span>' +
+      '<span class="k">Flight type matched</span><span class="v">' + (nb ? match + ' of ' + nb : '—') + '</span></div>' +
+      '<div class="note" style="margin-top:6px">Points on the diagonal line below mean the prediction matched the real flight exactly. Points above the line flew farther than predicted.</div>';
+    $('testSummary').innerHTML = s;
+    drawTestChart(md, pd);
+  }
+  function drawTestChart(md, pd) {
+    var cv = $('testChart'); if (!cv) return;
+    var pr = prepCanvas(cv), ctx = pr.ctx, w = pr.w, h = pr.h;
+    var mx = 1; md.concat(pd).forEach(function (v) { mx = Math.max(mx, v); }); mx = Math.ceil(mx * 1.15);
+    var l = 34, r = 10, t = 10, b = 30, side = Math.min(w - l - r, h - t - b);
+    function X(v) { return l + side * v / mx; } function Y(v) { return t + side - side * v / mx; }
+    ctx.strokeStyle = C.faint; ctx.lineWidth = 1; ctx.strokeRect(l, t, side, side);
+    for (var g = 0; g <= mx; g += Math.max(1, Math.round(mx / 5))) { text(ctx, String(g), X(g), t + side + 9, C.dim, 'center', 9); text(ctx, String(g), l - 4, Y(g), C.dim, 'right', 9); }
+    ctx.setLineDash([5, 4]); vline(ctx, [[X(0), Y(0)], [X(mx), Y(mx)]], C.dim, 1, false, false); ctx.setLineDash([]);
+    text(ctx, 'perfect prediction', X(mx * 0.45) + 6, Y(mx * 0.45) + 4, C.dim, 'left', 9);
+    for (var i = 0; i < md.length; i++) { var x = X(pd[i]), y = Y(md[i]); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.stroke(); }
+    text(ctx, 'predicted distance (m) →', l + side / 2, t + side + 22, C.dim, 'center', 10);
+    ctx.save(); ctx.translate(10, t + side / 2); ctx.rotate(-Math.PI / 2); text(ctx, 'measured distance (m) →', 0, 0, C.dim, 'center', 10); ctx.restore();
+  }
+  function exportCSV() {
+    var tests = state.design.tests;
+    if (!tests.length) { toast('There are no test flights to export yet.'); return; }
+    function q(v) { v = v === null || v === undefined ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    var rows = [['Flight', 'Date', 'Design', 'Thrower', 'Measured distance (m)', 'Predicted distance (m)', 'Distance difference (%)', 'Measured time (s)', 'Predicted time (s)', 'Measured flight', 'Predicted flight', 'Launch speed (m/s)', 'Launch angle (deg)', 'Launch height (m)', 'Notes']];
+    tests.forEach(function (t, i) {
+      var p = t.predicted || {}, dd = pctDiff(t.distance, p.distance);
+      rows.push([i + 1, t.date, state.design.name, t.team, t.distance, p.distance, dd === null ? '' : dd.toFixed(1), t.time, p.time, behaviorName(t.behavior), behaviorName(p.behavior), p.launchSpeed, p.launchAngle, p.launchHeight, t.notes]);
+    });
+    download(safeName(state.design.name) + '-test-flights.csv', rows.map(function (r) { return r.map(q).join(','); }).join('\r\n'), 'text/csv');
+  }
+
+  /* =====================================================================
+     FILES, TABS, START-UP
+     ===================================================================== */
+  function loadDesign(d, msg) {
+    state.design = P.sanitize(d);
+    state.sim = null; fcache = null;
+    updateTitle();
+    changed(true);
+    renderAside();
+    redrawTab();
+    if (msg) toast(msg);
+  }
+  function saveFile() {
+    var json = JSON.stringify(state.design, null, 2);
+    download(safeName(state.design.name) + '.json', json, 'application/json');
+    toast('Design saved to your Downloads folder.');
+  }
+  function openFile(file) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var d = JSON.parse(rd.result);
+        if (!d || d.format !== 'foam-glider-design') throw new Error('This is not a foam glider design file.');
+        loadDesign(d, 'Opened "' + (d.name || file.name) + '".');
+      } catch (e) { toast('Could not open the file: ' + e.message); }
+    };
+    rd.readAsText(file);
+  }
+  function setTab(t) {
+    state.tab = t;
+    stopReplay();
+    Array.prototype.forEach.call(document.querySelectorAll('nav button'), function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === t); });
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (s) { s.classList.toggle('on', s.id === 'tab-' + t); });
+    renderAside();
+    redrawTab();
+  }
+  function redrawTab() {
+    if (state.tab === 'design') { drawDesign(); renderReadouts(); }
+    else if (state.tab === 'flight') { renderResults(); fcache = null; drawFlightFrame(); }
+    else if (state.tab === 'template') renderTemplate();
+    else renderTests();
+  }
+
+  function init() {
+    Array.prototype.forEach.call(document.querySelectorAll('nav button'), function (b) {
+      b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
+    });
+    var menu = $('exampleMenu');
+    $('btnNew').addEventListener('click', function (e) { e.stopPropagation(); menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; });
+    document.addEventListener('click', function () { menu.style.display = 'none'; });
+    Array.prototype.forEach.call(menu.querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('Start a new design? Save your current design first if you want to keep it.')) return;
+        var ex = b.getAttribute('data-ex');
+        loadDesign(ex === 'flat' ? exampleFlat() : (ex === 'winglets' ? exampleWinglets() : (ex === 'canard' ? exampleCanard() : P.exampleGlider())), 'New design started.');
+      });
+    });
+    $('btnSave').addEventListener('click', saveFile);
+    $('btnOpen').addEventListener('click', function () { $('fileInput').value = ''; $('fileInput').click(); });
+    $('fileInput').addEventListener('change', function () { if (this.files && this.files[0]) openFile(this.files[0]); });
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { fcache = null; redrawTab(); }, 150); });
+    window.addEventListener('afterprint', function () { $('printArea').innerHTML = ''; });
+
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { saved = null; }
+    if (saved && saved.format === 'foam-glider-design') loadDesign(saved, 'Restored your last design.');
+    else loadDesign(P.exampleGlider());
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
+</body>
+</html>
